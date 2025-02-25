@@ -3,69 +3,123 @@ Below is the updated version of your ai-Integration.md document with the new mul
 # AI Integration API Specification
 
 ## Overview
-This document details the integration of AI-powered recommendations into the pet finder results page. The goal is to asynchronously generate a personalized recommendation—based on user input and filtered animal data—using the OpenAI API. The generated recommendation is cached in local storage to improve performance and user experience.
+This document details the integration of AI-powered recommendations into the pet finder results page, including the pet type filtering system. The goal is to provide personalized recommendations based on user preferences and filtered animal data.
 
 ## Architecture
-- **Frontend**: Renders search results, pet preferences, and an AI recommendation area.
-- **Local Storage**: Caches the AI-generated recommendation for subsequent visits.
-- **Backend (Vercel Endpoint)**: Aggregates user preferences and animal data, constructs a prompt, and calls the OpenAI API.
-- **OpenAI API**: Generates a text completion (recommendation) based on the provided prompt.
+- **Frontend**: Renders search form, results page with locked filters, and AI recommendations
+- **Local Storage**: Caches user preferences and AI recommendations
+- **Backend**: Handles Petfinder API requests and AI recommendation generation
+- **Petfinder API**: Provides filtered animal data based on user preferences
 
-## Prerequisites
-- An OpenAI API account and API key.
-- A Vercel deployment for the custom backend endpoint.
-- Frontend application with local storage support.
+## User Flow
 
-## User Flow Overview
-1. **Pet Type Preference Step (New)** – The user selects one or more pet types (Dogs, Cats, Rabbits).  
-   - **Logic**:  
-     - If one or two options are selected, filter results accordingly.
-     - If all three are selected, treat it as "agnostic" (i.e. no filter).
-   - **UI Note**: This page is the last step before entering the zip code and does not auto-progress. The user must click a "Next" button.
-2. **Zip Code and Additional Input** – The user provides their zip code and any other necessary data.
-3. **Search Results** – Animal listings are displayed (filtered based on the pet type selection if applicable).
-4. **AI Recommendation Fetch** – In the background, the AI recommendation is generated and displayed.
+### 1. Pet Type Selection (Step 1)
+- Users select pet types (Dogs, Cats, Rabbits)
+- Interface provides clear visual feedback
+- Single "Next" button for progression
+- Selection is final and determines results page filters
+- Empty selection shows all available pets
+
+### 2. Location Input (Step 2)
+- Users enter zip code
+- Validates input format
+- Stores location preference
+
+### 3. Results Page
+- Displays filtered pet results based on initial selection
+- Shows locked filter buttons reflecting selection
+- Generates AI recommendations based on:
+  - Selected pet types (or all types if none selected)
+  - Location
+  - Available animals
 
 ## API Endpoints
 
+### Search Endpoint
+```javascript
+GET /api/search
+Parameters:
+- zipCode: string (required)
+- petTypes: string (optional, comma-separated)
+- status: string (default: 'adoptable')
+
+Example: /api/search?zipCode=12345&petTypes=Dog,Cat&status=adoptable
+```
+
 ### AI Recommendation Endpoint
-- **URL**: `/api/getAiRecommendation`
-- **Method**: POST
-- **Description**: Receives user preferences, input data, and filtered animal listings, then returns a personalized recommendation.
+```javascript
+POST /api/getAiRecommendation
+Request Body: {
+  selectedTypes: string[],  // Empty array means all types
+  zipCode: string,
+  filteredAnimals: Animal[]
+}
+```
 
-#### Request Payload
-```json
-{
-  "preferredPetType": "dog",          // e.g., "dog", "cat", "rabbit", or "any" (if agnostic)
-  "userInput": {
-    "zipCode": "12345",
-    "otherData": "..."
-  },
-  "filteredAnimals": [
-    {
-      "id": 123,
-      "type": "dog",
-      "breed": "Labrador"
-      // additional properties...
-    }
-    // ...more animal objects
-  ]
+## Data Structures
+
+### Pet Type Selection
+```javascript
+interface PetTypeState {
+  selectedTypes: string[];  // Empty array means all types
 }
 
-Response Payload
-
+// LocalStorage format
 {
-  "recommendation": "Based on your preferences, we recommend checking out these companions: ...",
-  "metadata": {
-    "generatedAt": "2025-02-24T20:00:00Z"
+  "selectedPetTypes": string[],
+  "zipCode": string
+}
+```
+
+### Filter State Management
+```javascript
+interface FilterState {
+  types: string[];
+  initialSelection: string[];
+}
+```
+
+## Implementation Details
+
+### Filter Display Logic
+```javascript
+const renderFilterButtons = () => {
+  return allTypes.map(type => (
+    <Button
+      key={type}
+      disabled={true}
+      variant={selectedTypes.includes(type) ? 'default' : 'outline'}
+      className="cursor-not-allowed opacity-70"
+    >
+      {type}s {selectedTypes.includes(type) && '✓'}
+    </Button>
+  ));
+};
+```
+
+### API Request Formation
+```javascript
+const buildApiUrl = (zipCode, types) => {
+  let url = `/api/search?zipCode=${zipCode}&status=adoptable`;
+  if (types.length > 0) {
+    url += `&petTypes=${types.join(',')}`;
   }
-}
+  return url;
+};
+```
 
-Error Response
+## Error Handling
+- Validates zip code format
+- Handles API request failures
+- Manages token expiration
+- Provides fallback recommendations
 
-{
-  "error": "Unable to generate recommendation. Please try again later."
-}
+## Future Enhancements
+- Enhanced filter analytics
+- Additional filter categories
+- Improved AI recommendations based on filter usage
+- Filter preference learning
+- Better visual feedback for locked state
 
 ## Pet Type Selection
 

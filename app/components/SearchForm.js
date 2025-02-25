@@ -33,7 +33,6 @@ export default function SearchForm() {
 
   const handleNext = () => {
     if (currentStep === 1 && selectedPetTypes.length > 0) {
-      saveSelectedPetTypes(selectedPetTypes);
       setCurrentStep(2);
     }
   };
@@ -42,8 +41,18 @@ export default function SearchForm() {
     e.preventDefault();
     if (validateZipCode(zipCode)) {
       saveZipCode(zipCode);
-      const petTypesParam = selectedPetTypes.length === 3 ? 'any' : selectedPetTypes.join(',');
-      router.push(`/results?zipCode=${encodeURIComponent(zipCode)}&petTypes=${encodeURIComponent(petTypesParam)}`);
+      
+      // Build the URL with proper parameters
+      let url = `/results?zipCode=${encodeURIComponent(zipCode)}`;
+      
+      // Only add petTypes if specific types are selected (not all)
+      if (selectedPetTypes.length > 0 && selectedPetTypes.length < 3) {
+        url += `&petTypes=${encodeURIComponent(selectedPetTypes.join(','))}`;
+      }
+      
+      // Save to localStorage
+      saveSelectedPetTypes(selectedPetTypes);
+      router.push(url);
     } else {
       setError('Please enter a valid 5-digit zip code.');
     }
@@ -92,78 +101,66 @@ export default function SearchForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
-      {currentStep === 1 ? (
-        <div className="space-y-4">
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-semibold text-foreground mb-2">What type of pet are you looking for?</h2>
-            <p className="text-sm text-muted-foreground">Select one or more options. Choosing all is the same as no preference.</p>
-          </div>
-          
-          <div className="space-y-3">
+    <div className="flex-grow flex flex-col items-center justify-center w-full max-w-md mx-auto px-4">
+      {currentStep === 1 && (
+        <div className="text-center w-full">
+          <h2 className="text-2xl font-bold mb-6">What type of pet are you looking for?</h2>
+          <div className="space-y-4">
             {['Dogs', 'Cats', 'Rabbits'].map((type) => (
-              <label key={type} className="flex items-center p-4 border rounded-lg hover:bg-accent/5 transition-colors cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectedPetTypes.includes(type.toLowerCase())}
-                  onChange={() => handlePetTypeChange(type.toLowerCase())}
-                  className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <span className="ml-3 text-base">{type}</span>
-              </label>
+              <Button
+                key={type}
+                onClick={() => handlePetTypeChange(type)}
+                variant={selectedPetTypes.includes(type) ? "default" : "outline"}
+                className="w-full py-6 text-lg"
+              >
+                {type} {selectedPetTypes.includes(type) && '✓'}
+              </Button>
             ))}
           </div>
-
-          <Button
-            type="button"
-            onClick={handleNext}
+          <Button 
+            onClick={handleNext} 
             disabled={selectedPetTypes.length === 0}
-            className="w-full mt-6"
+            className="w-full mt-6 py-6 text-lg"
           >
             Next
           </Button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="zipCode" className="block text-sm font-medium text-foreground mb-1">
-              Enter your zip code
-            </label>
+      )}
+      
+      {currentStep === 2 && (
+        <div className="text-center w-full">
+          <h2 className="text-2xl font-bold mb-6">Enter your zip code</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="text"
-              id="zipCode"
               value={zipCode}
-              onChange={(e) => {
-                setZipCode(e.target.value);
-                setError(null);
-              }}
-              placeholder="Enter 5-digit zip code"
-              className="w-full px-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              onChange={(e) => setZipCode(e.target.value)}
+              placeholder="Enter zip code"
+              className="text-center text-xl py-6"
               maxLength={5}
             />
-            {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button 
-              type="submit" 
-              className="flex-1"
-              disabled={loading || locationLoading}
-            >
-              {loading ? <LoadingSpinner size="small" /> : 'Find Pets'}
+            {error && <p className="text-red-500">{error}</p>}
+            <Button type="submit" className="w-full py-6 text-lg">
+              Find Pets
             </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={detectLocation}
-              disabled={loading || locationLoading}
-              className="flex-1"
-            >
-              {locationLoading ? <LoadingSpinner size="small" /> : 'Use My Location'}
-            </Button>
-          </div>
+          </form>
         </div>
       )}
-    </form>
+    </div>
+
+    {/* Bottom navigation - only show if not on step 1 */}
+    {currentStep !== 1 && (
+      <div className="mt-auto py-4 px-4 w-full">
+        <div className="max-w-md mx-auto">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentStep(currentStep - 1)}
+            className="w-full py-4"
+          >
+            Back
+          </Button>
+        </div>
+      </div>
+    )}
   );
 }

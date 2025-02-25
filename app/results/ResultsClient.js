@@ -13,7 +13,8 @@ export default function ResultsClient({ initialZipCode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [selectedPetTypes, setSelectedPetTypes] = useState([]);
+  const [filtersLocked, setFiltersLocked] = useState(false);
   const router = useRouter();
   const headerRef = useRef(null);
   
@@ -23,17 +24,43 @@ export default function ResultsClient({ initialZipCode }) {
   // Add pagination state
   const [displayCount, setDisplayCount] = useState(12);
   
+  // Initialize state from URL parameters
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const petTypesParam = urlParams.get('petTypes');
+    
+    let types = [];
+    if (petTypesParam && petTypesParam !== 'any' && petTypesParam !== 'null') {
+      types = petTypesParam.split(',')
+        .filter(Boolean)
+        .map(type => {
+          const singular = type.toLowerCase().endsWith('s') ? type.slice(0, -1) : type;
+          return singular.charAt(0).toUpperCase() + singular.slice(1).toLowerCase();
+        });
+    }
+    
+    // Always lock filters regardless of selection
+    setFiltersLocked(true);
+    setSelectedPetTypes(types);
+  }, [zipCode]); // Remove window.location.search dependency
+
+  // Add separate effect for fetching pets
   useEffect(() => {
     if (!zipCode) {
       setError('Please provide a zip code');
       setLoading(false);
       return;
     }
-    
+
     async function fetchPets() {
       try {
-        // Update API call to only fetch adoptable pets
-        const response = await fetch(`/api/search?zipCode=${zipCode}&status=adoptable`);
+        const petTypesQuery = selectedPetTypes.length > 0 
+          ? `&petTypes=${selectedPetTypes.join(',')}`
+          : '';
+        
+        const response = await fetch(`/api/search?zipCode=${zipCode}&status=adoptable${petTypesQuery}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch pets');
@@ -49,8 +76,38 @@ export default function ResultsClient({ initialZipCode }) {
     }
     
     fetchPets();
-  }, [zipCode]);
-  
+  }, [zipCode, selectedPetTypes]);
+
+  const renderFilterButtons = () => {
+    const allTypes = ['Dog', 'Cat', 'Rabbit'];
+    return (
+      <div className="flex gap-2 mb-4">
+        {allTypes.map((type) => (
+          <Button
+            key={type}
+            disabled={true}
+            variant={selectedPetTypes.includes(type) ? 'default' : 'outline'}
+            className="cursor-not-allowed opacity-70"
+          >
+            {type}s {selectedPetTypes.includes(type) && '✓'}
+          </Button>
+        ))}
+      </div>
+    );
+  };
+
+  // Filter pets based on selected types
+  const filteredPets = pets.filter(pet => {
+    if (selectedPetTypes.length === 0) return true; // Show all if no filters
+    return selectedPetTypes.includes(pet.type);
+  });
+
+  const availableTypes = [...new Set(pets.map(pet => pet.type))];
+  const showAllTypes = selectedPetTypes.length === 0;
+
+  // Only show filter tags for selected pet types or all if none selected
+  const filterTags = showAllTypes ? availableTypes : selectedPetTypes;
+
   useEffect(() => {
     const handleScroll = () => {
       if (headerRef.current) {
@@ -65,23 +122,19 @@ export default function ResultsClient({ initialZipCode }) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
+
   const handleSearchAgain = () => {
     router.push('/search');
   };
-  
-  // Filter pets based on active filter
-  const filteredPets = pets.filter(pet => {
-    // Only show adoptable pets
-    if (pet.status !== 'adoptable') return false;
-    
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'dogs') return pet.type === 'Dog';
-    if (activeFilter === 'cats') return pet.type === 'Cat';
-    if (activeFilter === 'other') return pet.type !== 'Dog' && pet.type !== 'Cat';
-    return true;
-  });
-  
+
+  const handleFilterClick = (type) => {
+    if (selectedPetTypes.includes(type)) {
+      setSelectedPetTypes(selectedPetTypes.filter(t => t !== type));
+    } else {
+      setSelectedPetTypes([...selectedPetTypes, type]);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh]">
@@ -97,7 +150,7 @@ export default function ResultsClient({ initialZipCode }) {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <motion.div 
@@ -123,42 +176,7 @@ export default function ResultsClient({ initialZipCode }) {
         ref={headerRef}
         className="sticky top-0 z-10 bg-white/90 backdrop-blur-lg py-6 transition-all duration-200 mb-8 rounded-xl"
       >
-        <div className="flex flex-wrap gap-3 justify-center">
-          <Button
-            variant={activeFilter === 'all' ? 'default' : 'outline'}
-            onClick={() => setActiveFilter('all')}
-            className="rounded-full px-6"
-          >
-            All Pets
-          </Button>
-          <Button
-            variant={activeFilter === 'dogs' ? 'default' : 'outline'}
-            onClick={() => setActiveFilter('dogs')}
-            className="rounded-full px-6"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 005 10a6 6 0 0012 0c0-.35-.035-.687-.1-1.016A5 5 0 0010 11z" clipRule="evenodd" />
-            </svg>
-            Dogs
-          </Button>
-          <Button
-            variant={activeFilter === 'cats' ? 'default' : 'outline'}
-            onClick={() => setActiveFilter('cats')}
-            className="rounded-full px-6"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-            </svg>
-            Cats
-          </Button>
-          <Button
-            variant={activeFilter === 'other' ? 'default' : 'outline'}
-            onClick={() => setActiveFilter('other')}
-            className="rounded-full px-6"
-          >
-            Other Pets
-          </Button>
-        </div>
+        {renderFilterButtons()}
       </div>
 
       {/* Results Grid */}
@@ -209,4 +227,4 @@ export default function ResultsClient({ initialZipCode }) {
       </div>
     </div>
   );
-} 
+}

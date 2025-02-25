@@ -171,7 +171,7 @@ export default function QuestionnaireSteps({
         whileTap={{ scale: 0.98 }}
         onClick={onNextStep}
         disabled={formData.petTypes.length === 0}
-        className="w-full mt-6 bg-primary text-white py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full mt-8 bg-primary text-white py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Next
       </motion.button>

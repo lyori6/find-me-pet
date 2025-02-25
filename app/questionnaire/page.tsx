@@ -98,7 +98,7 @@ export default function QuestionnairePage() {
             >
               Find Pets
             </Button>
-          ) : (
+          ) : currentStep !== 4 && (
             <Button
               onClick={handleNext}
               className="px-8 ml-auto"

@@ -1,7 +1,78 @@
+# Pet Type Filter Implementation
 
-	1.	API Call Filtering – The API will only request animals that match the user’s selection in Step 5.
-	2.	Results Page Logic – The UI will display filter tags only for the selected categories.
-	3.	Default Behavior – If the user selects all three options (Dogs, Cats, Rabbits), the system will treat it as “any,” and all animals will be shown.
+## Overview
+The pet type filter system allows users to filter their pet search results by animal type (Dogs, Cats, Rabbits). The implementation includes initial selection during search and displays the selected filters on the results page.
+
+## Key Features
+
+### Search Form (Step 1 of 2)
+- Users can select one or more pet types (Dogs, Cats, Rabbits)
+- Clear visual feedback with checkmark indicators for selected types
+- Single "Next" button positioned below the type selection
+- Selection state persists in localStorage
+- Selecting all types shows all available pets
+- Initial selection is final and cannot be changed on results page
+
+### Results Page
+- Filter buttons show current selection state
+- Filters are always locked to prevent state changes
+- Locked filters are visually distinct (reduced opacity, disabled state)
+- Filter state persists across page refreshes
+- URL parameters reflect filter state
+
+## Technical Implementation
+
+### URL Parameter Handling
+```javascript
+// Example URL format
+/results?zipCode=12345&petTypes=Dog,Cat
+
+// URL construction in SearchForm
+if (selectedPetTypes.length > 0) {
+  url += `&petTypes=${encodeURIComponent(selectedPetTypes.join(','))}`;
+}
+```
+
+### Filter State Management
+- Initial state is set from URL parameters
+- Filters are always locked on results page
+- Users must return to search form to change filters
+- State is maintained using React useState hooks
+
+### API Integration
+- Pet type parameters are properly formatted for Petfinder API
+- Multiple type selections use separate type parameters
+- Empty selection shows all available pets
+
+### LocalStorage Integration
+```javascript
+// Structure for stored preferences
+{
+  "selectedPetTypes": ["Dog", "Cat"] // or [] for all pets
+}
+```
+
+## User Experience
+- Clear visual hierarchy with prominent type selection buttons
+- Immediate feedback on selection
+- Smooth transitions between steps
+- Consistent button styling and behavior
+- Simplified navigation with single "Next" button
+- Locked filters prevent confusion from mid-search changes
+- Users must start new search to change filters
+
+## Edge Cases
+- Handles plural/singular type names (e.g., "Dogs" vs "Dog")
+- Manages case sensitivity in type names
+- Gracefully handles empty selections
+- Preserves filter state during page refreshes
+- Properly syncs URL parameters with visual state
+
+## Future Considerations
+- Consider adding filter analytics
+- Potential for additional filter categories
+- Enhanced filter persistence strategies
+- Improved user feedback about locked state
 
 Updated AI Integration API Specification
 
