@@ -1,4 +1,4 @@
-import { getAccessToken } from '@/app/utils/petfinder';
+import { getAccessToken, resetTokenCache } from '@/app/utils/petfinder';
 
 // Helper function to generate enhanced descriptions
 function enhanceDescription(pet) {
@@ -101,9 +101,9 @@ export async function GET(request, { params }) {
   }
   
   try {
-    const token = await getAccessToken();
-    
-    const response = await fetch(
+    // First attempt with possibly cached token
+    let token = await getAccessToken();
+    let response = await fetch(
       `https://api.petfinder.com/v2/animals/${petId}`,
       {
         headers: {
@@ -112,6 +112,25 @@ export async function GET(request, { params }) {
         }
       }
     );
+    
+    // If the first attempt fails with a 401, try again by forcing a new token
+    if (response.status === 401) {
+      console.log('Token expired, requesting a new one...');
+      // Force token cache to expire so we get a fresh token
+      resetTokenCache();
+      token = await getAccessToken(true);
+      
+      // Retry the request with the new token
+      response = await fetch(
+        `https://api.petfinder.com/v2/animals/${petId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
     
     if (!response.ok) {
       const errorData = await response.json();
@@ -127,7 +146,7 @@ export async function GET(request, { params }) {
   } catch (error) {
     console.error('Error fetching pet details:', error);
     return Response.json(
-      { error: 'Failed to fetch pet details. Please try again later.' },
+      { error: `Error fetching pet details: ${error.message}` },
       { status: 500 }
     );
   }

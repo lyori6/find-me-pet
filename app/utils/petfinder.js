@@ -6,12 +6,13 @@ let tokenCache = {
 
 /**
  * Get an access token for the Petfinder API
+ * @param {boolean} forceRefresh - Whether to force a token refresh
  * @returns {Promise<string>} The access token
  */
-export async function getAccessToken() {
-  // Check if we have a valid cached token
+export async function getAccessToken(forceRefresh = false) {
+  // Check if we have a valid cached token and forceRefresh is false
   const now = Date.now();
-  if (tokenCache.token && tokenCache.expiry > now) {
+  if (!forceRefresh && tokenCache.token && tokenCache.expiry > now) {
     return tokenCache.token;
   }
 
@@ -30,7 +31,8 @@ export async function getAccessToken() {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get access token');
+      const errorData = await response.json();
+      throw new Error(`Failed to get access token: ${errorData.detail || errorData.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
@@ -49,14 +51,25 @@ export async function getAccessToken() {
 }
 
 /**
+ * Reset the token cache, forcing a new token to be fetched on the next request
+ */
+export function resetTokenCache() {
+  tokenCache = {
+    token: null,
+    expiry: 0
+  };
+}
+
+/**
  * Search for animals using the Petfinder API
  * @param {string} zipCode - The zip code to search near
  * @param {number} limit - The maximum number of results to return
+ * @param {boolean} retryWithNewToken - Whether this is a retry with a new token
  * @returns {Promise<Array>} The animals found
  */
-export async function searchAnimals(zipCode, limit = 25) {
+export async function searchAnimals(zipCode, limit = 25, retryWithNewToken = false) {
   try {
-    const token = await getAccessToken();
+    const token = await getAccessToken(retryWithNewToken);
     
     const response = await fetch(
       `https://api.petfinder.com/v2/animals?location=${zipCode}&distance=25&sort=distance&limit=${limit}`,
@@ -67,6 +80,13 @@ export async function searchAnimals(zipCode, limit = 25) {
         }
       }
     );
+
+    // If token is expired and this is the first attempt, retry with a new token
+    if (response.status === 401 && !retryWithNewToken) {
+      console.log('Token expired during searchAnimals, requesting a new one...');
+      resetTokenCache();
+      return searchAnimals(zipCode, limit, true);
+    }
 
     if (!response.ok) {
       const error = await response.json();
@@ -84,11 +104,12 @@ export async function searchAnimals(zipCode, limit = 25) {
 /**
  * Get details for a specific animal
  * @param {string} id - The animal ID
+ * @param {boolean} retryWithNewToken - Whether this is a retry with a new token
  * @returns {Promise<Object>} The animal details
  */
-export async function getAnimal(id) {
+export async function getAnimal(id, retryWithNewToken = false) {
   try {
-    const token = await getAccessToken();
+    const token = await getAccessToken(retryWithNewToken);
     
     const response = await fetch(
       `https://api.petfinder.com/v2/animals/${id}`,
@@ -99,6 +120,13 @@ export async function getAnimal(id) {
         }
       }
     );
+
+    // If token is expired and this is the first attempt, retry with a new token
+    if (response.status === 401 && !retryWithNewToken) {
+      console.log('Token expired during getAnimal, requesting a new one...');
+      resetTokenCache();
+      return getAnimal(id, true);
+    }
 
     if (!response.ok) {
       const error = await response.json();

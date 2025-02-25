@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getZipCode } from '../utils/storage';
 import PetCard from '../components/PetCard';
 import { Button } from '@/components/ui/button';
+import AiRecommendation from '@/components/ai-recommendation';
 
 export default function ResultsClient({ initialZipCode }) {
   const [pets, setPets] = useState([]);
@@ -187,6 +188,21 @@ export default function ResultsClient({ initialZipCode }) {
 
       {/* Results section */}
       <div className="mt-6">
+        {/* AI Recommendation section - always show at the top when we have pets */}
+        {filteredPets.length > 0 && (
+          <div className="mb-8">
+            <AiRecommendation 
+              selectedTypes={selectedPetTypes}
+              zipCode={zipCode}
+              filteredAnimals={filteredPets}
+              onRetry={() => {
+                // Clear the localStorage cache
+                localStorage.removeItem("aiRecommendation");
+              }}
+            />
+          </div>
+        )}
+
         {/* Pet grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {filteredPets.slice(0, displayCount).map(pet => (

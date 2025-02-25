@@ -1,4 +1,4 @@
-import { getAccessToken } from '@/app/utils/petfinder';
+import { getAccessToken, resetTokenCache } from '@/app/utils/petfinder';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -10,7 +10,8 @@ export async function GET(request) {
   }
   
   try {
-    const token = await getAccessToken();
+    // Get an access token
+    let token = await getAccessToken();
     
     // Build the API URL with filters
     let apiUrl = `https://api.petfinder.com/v2/animals?location=${zipCode}&distance=25&sort=distance&status=adoptable`;
@@ -28,40 +29,61 @@ export async function GET(request) {
       
       if (types.length > 0) {
         // Make a separate API call for each type and combine results
-        const promises = types.map(type => {
+        const fetchWithType = async (type, retryWithNewToken = false) => {
           const typeUrl = `${apiUrl}&type=${type}`;
           console.log('Fetching from Petfinder API:', typeUrl);
-          return fetch(typeUrl, {
+          
+          const response = await fetch(typeUrl, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
-          }).then(resp => resp.json());
-        });
-
-        // Wait for all requests to complete
-        const results = await Promise.all(promises);
-        
-        // Combine and deduplicate results
-        const allAnimals = results.flatMap(result => result.animals || []);
-        const uniqueAnimals = [...new Map(allAnimals.map(animal => [animal.id, animal])).values()];
-        
-        // Sort by distance since we're combining multiple requests
-        const sortedAnimals = uniqueAnimals.sort((a, b) => a.distance - b.distance);
-        
-        // Return combined results
-        return new Response(JSON.stringify({
-          pagination: {
-            count: sortedAnimals.length,
-            total_count: results.reduce((sum, r) => sum + (r.pagination?.total_count || 0), 0)
-          },
-          animals: sortedAnimals
-        }), {
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=60, stale-while-revalidate=300'
+          });
+          
+          // If the token is expired and this is the first attempt, get a new token and retry
+          if (response.status === 401 && !retryWithNewToken) {
+            console.log('Token expired during type search, requesting a new one...');
+            resetTokenCache();
+            token = await getAccessToken(true);
+            return fetchWithType(type, true);
           }
-        });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`Failed to fetch pets: ${error.detail || error.message || 'Unknown error'}`);
+          }
+          
+          return response.json();
+        };
+        
+        try {
+          // Wait for all requests to complete
+          const promises = types.map(type => fetchWithType(type));
+          const results = await Promise.all(promises);
+          
+          // Combine and deduplicate results
+          const allAnimals = results.flatMap(result => result.animals || []);
+          const uniqueAnimals = [...new Map(allAnimals.map(animal => [animal.id, animal])).values()];
+          
+          // Sort by distance since we're combining multiple requests
+          const sortedAnimals = uniqueAnimals.sort((a, b) => a.distance - b.distance);
+          
+          // Return combined results
+          return new Response(JSON.stringify({
+            pagination: {
+              count: sortedAnimals.length,
+              total_count: results.reduce((sum, r) => sum + (r.pagination?.total_count || 0), 0)
+            },
+            animals: sortedAnimals
+          }), {
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'public, max-age=60, stale-while-revalidate=300'
+            }
+          });
+        } catch (error) {
+          throw error; // Re-throw to be handled by the outer catch
+        }
       }
     }
     
@@ -69,7 +91,7 @@ export async function GET(request) {
     console.log('Fetching from Petfinder API:', apiUrl);
     
     // Add cache-control header to enable caching for 5 minutes
-    const response = await fetch(apiUrl, {
+    let response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -78,6 +100,23 @@ export async function GET(request) {
         revalidate: 300 // Cache for 5 minutes
       }
     });
+    
+    // If the token is expired, get a new token and retry
+    if (response.status === 401) {
+      console.log('Token expired, requesting a new one...');
+      resetTokenCache();
+      token = await getAccessToken(true);
+      
+      response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        next: {
+          revalidate: 300 // Cache for 5 minutes
+        }
+      });
+    }
     
     if (!response.ok) {
       const errorData = await response.json();
@@ -103,7 +142,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Error fetching pets:', error);
     return Response.json(
-      { error: 'Failed to fetch pets. Please try again later.' },
+      { error: `Error fetching pets: ${error.message}` },
       { status: 500 }
     );
   }

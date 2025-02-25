@@ -108,6 +108,37 @@ const buildApiUrl = (zipCode, types) => {
 };
 ```
 
+## Current Implementation Status
+
+The AI recommendation feature has now been implemented with the following components:
+
+### Backend
+- Created `/api/getAiRecommendation` endpoint that accepts POST requests with user preferences and animal data
+- Built a GPT-4o-mini-based recommendation system that analyzes available pets and suggests the best match
+- Implemented structured response formatting for consistent UI display
+
+### Frontend
+- Added `AiRecommendation` component with support for:
+  - Loading states with skeleton placeholders
+  - Error handling with retry capability 
+  - Automatic and manual refresh options
+  - Local storage caching to minimize API calls
+- Integrated the component seamlessly into the ResultsClient
+
+### Prompt Engineering
+- Crafted a detailed prompt that focuses on:
+  - Selecting a specific pet from the available options
+  - Providing personalized reasoning for the recommendation
+  - Identifying key matching qualities with percentage scores
+- Optimized token usage to balance detail and cost
+
+### Next Steps
+- Move the OpenAI prompt to a more secure location (environment variable or Cloud Function)
+- Implement analytics to track recommendation effectiveness
+- Add user feedback mechanisms for recommendation quality
+- Expand recommendation factors to include more user preferences
+- Consider A/B testing different prompt strategies to optimize recommendations
+
 ## Error Handling
 - Validates zip code format
 - Handles API request failures
@@ -227,16 +258,20 @@ Step 6: Backend AI Recommendation Generation
 "User prefers a dog. Input: {zipCode: '12345', ...}. Available animals: [{id:123, type:'dog', breed:'Labrador'}, ...]. Please recommend the best companion."
 
 
-	•	OpenAI API Call: Use the OpenAI API (model gpt-3.5-turbo) to generate a recommendation.
+	•	OpenAI API Call: Use the OpenAI API (model gpt-4o-mini) to generate a recommendation.
 
-const completion = await openai.createCompletion({
-  model: "gpt-3.5-turbo",
-  prompt: prompt,
-  max_tokens: 150,
+```javascript
+const completion = await openai.chat.completions.create({
+  model: "gpt-4o-mini",
+  messages: [
+    { role: "system", content: "You are a helpful pet adoption assistant." },
+    { role: "user", content: prompt }
+  ],
+  max_tokens: 200,
   temperature: 0.7
 });
-const recommendationText = completion.data.choices[0].text.trim();
-
+const recommendationText = completion.choices[0].message.content.trim();
+```
 
 	•	Return: Send the generated text back to the frontend.
 
@@ -244,11 +279,11 @@ Step 7: Display Recommendation and Update Cache
 	•	Display: Update the recommendation area in the UI once the response is received.
 	•	Cache: Store the new recommendation in local storage until the user’s inputs change.
 
-OpenAI API Parameters & Considerations
-	•	Model: Use gpt-3.5-turbo for a balance of cost and performance.
-	•	Max Tokens: Limit to around 150 tokens for concise recommendations.
-	•	Temperature: Set to ~0.7 to allow creative yet focused outputs.
-	•	Error Handling: Ensure graceful degradation if the OpenAI API fails or returns an error.
+## OpenAI API Parameters & Considerations
+- **Model**: Using `gpt-4o-mini` for improved recommendation quality while maintaining reasonable cost
+- **Max Tokens**: Limited to around 200 tokens for concise recommendations
+- **Temperature**: Set to ~0.7 to allow creative yet focused outputs
+- **Error Handling**: Ensures graceful degradation if the OpenAI API fails or returns an error
 
 Security & Best Practices
 	•	API Key Security: Keep your OpenAI API key secure on the backend (Vercel environment variables) and never expose it to the frontend.
