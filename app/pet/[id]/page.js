@@ -1,11 +1,11 @@
 import PetDetailsClient from './PetDetailsClient';
 
+export const dynamic = 'force-dynamic';
+
 export default function PetDetailsPage({ params }) {
-  const { id } = params;
-  
   return (
-    <div className="container mx-auto px-4 py-8">
-      <PetDetailsClient petId={id} />
+    <div className="min-h-screen">
+      <PetDetailsClient petId={params.id} />
     </div>
   );
 }

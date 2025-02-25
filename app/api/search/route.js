@@ -12,7 +12,7 @@ export async function GET(request) {
     const token = await getAccessToken();
     
     const response = await fetch(
-      `https://api.petfinder.com/v2/animals?location=${zipCode}&distance=25&sort=distance`,
+      `https://api.petfinder.com/v2/animals?location=${zipCode}&distance=25&sort=distance&status=adoptable`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
