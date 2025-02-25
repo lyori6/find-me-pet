@@ -1,24 +1,54 @@
 # Pet Type Filter Implementation
 
 ## Overview
-The pet type filter system allows users to filter their pet search results by animal type (Dogs, Cats, Rabbits). The implementation includes initial selection during search and displays the selected filters on the results page.
+The pet type filter system allows users to filter their pet search results by animal type (Dogs, Cats, Rabbits). Currently, the filters are locked (disabled) on the results page due to ongoing implementation issues that need to be resolved.
 
-## Key Features
+## Current Status
+The type filter is currently implemented with the following features:
 
-### Search Form (Step 1 of 2)
-- Users can select one or more pet types (Dogs, Cats, Rabbits)
-- Clear visual feedback with checkmark indicators for selected types
-- Single "Next" button positioned below the type selection
-- Selection state persists in localStorage
-- Selecting all types shows all available pets
-- Initial selection is final and cannot be changed on results page
+1. Multiple Type Selection
+   - Users can select multiple pet types (e.g., Dogs and Cats)
+   - Each type combination triggers parallel API calls to ensure complete results
+   - Results are automatically combined, deduplicated, and sorted by distance
 
-### Results Page
-- Filter buttons show current selection state
-- Filters are always locked to prevent state changes
-- Locked filters are visually distinct (reduced opacity, disabled state)
-- Filter state persists across page refreshes
-- URL parameters reflect filter state
+2. Loading States
+   - A loading spinner is shown during API calls
+   - Smooth transitions between loading, error, and results states
+   - Animated feedback keeps users informed of request progress
+
+3. Filter Locking
+   - Filters are currently locked after initial selection
+   - This is intentional to prevent race conditions during API calls
+   - Users must refresh or return to home to change filters
+
+## Known Issues and Limitations
+
+1. Filter Changes
+   - Filters cannot be changed on the results page
+   - This is a temporary limitation while we improve the filter handling
+   - Users should return to the home page to modify their search
+
+2. API Behavior
+   - Multiple type selections require parallel API calls
+   - Each type (e.g., Dog, Cat) requires a separate request
+   - Results are combined client-side for the best user experience
+
+## Future Improvements
+
+1. Dynamic Filter Updates
+   - Enable filter changes without page reload
+   - Implement proper state management for filter combinations
+   - Add transition animations for filter changes
+
+2. Performance Optimization
+   - Implement request batching for multiple types
+   - Add progressive loading for large result sets
+   - Optimize client-side result combining
+
+3. User Experience
+   - Add filter change confirmation dialog
+   - Improve error messaging for failed requests
+   - Add loading progress indicators for multiple requests
 
 ## Technical Implementation
 
@@ -33,24 +63,17 @@ if (selectedPetTypes.length > 0) {
 }
 ```
 
+### Caching Implementation
+- Results are cached in sessionStorage for 5 minutes
+- Cache is keyed by zipCode and selected pet types
+- Cached results are used when navigating back from pet details
+- Fresh data is fetched when cache expires or parameters change
+
 ### Filter State Management
 - Initial state is set from URL parameters
-- Filters are always locked on results page
+- Filters are locked on results page until issues are resolved
 - Users must return to search form to change filters
 - State is maintained using React useState hooks
-
-### API Integration
-- Pet type parameters are properly formatted for Petfinder API
-- Multiple type selections use separate type parameters
-- Empty selection shows all available pets
-
-### LocalStorage Integration
-```javascript
-// Structure for stored preferences
-{
-  "selectedPetTypes": ["Dog", "Cat"] // or [] for all pets
-}
-```
 
 ## User Experience
 - Clear visual hierarchy with prominent type selection buttons
@@ -73,6 +96,21 @@ if (selectedPetTypes.length > 0) {
 - Potential for additional filter categories
 - Enhanced filter persistence strategies
 - Improved user feedback about locked state
+
+## Implementation Details
+
+The current implementation:
+1. Splits multiple types into separate API calls
+2. Makes parallel requests for each type
+3. Combines and deduplicates results
+4. Sorts by distance
+5. Shows loading animation during requests
+6. Caches results for 5 minutes
+
+For developers:
+- Check `ResultsClient.js` for the main implementation
+- See `search/route.js` for the API handling
+- Loading states use Framer Motion for animations
 
 Updated AI Integration API Specification
 

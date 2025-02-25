@@ -450,17 +450,17 @@ export default function PetDetailsClient({ petId }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <span className={`px-4 py-2 ${petTypeColor} text-white rounded-full font-medium shadow-sm`}>
+              <span className={`px-4 py-2 bg-filter text-black rounded-full font-medium shadow-sm`}>
                 {pet.age}
               </span>
-              <span className="px-4 py-2 bg-secondary/10 text-secondary rounded-full font-medium shadow-sm">
+              <span className="px-4 py-2 bg-filter text-black rounded-full font-medium shadow-sm">
                 {pet.gender}
               </span>
-              <span className="px-4 py-2 bg-muted text-foreground rounded-full font-medium shadow-sm">
+              <span className="px-4 py-2 bg-filter text-black rounded-full font-medium shadow-sm">
                 {pet.size}
               </span>
               {pet.colors && pet.colors.primary && (
-                <span className="px-4 py-2 bg-muted text-foreground rounded-full font-medium shadow-sm">
+                <span className="px-4 py-2 bg-filter text-black rounded-full font-medium shadow-sm">
                   {pet.colors.primary}
                 </span>
               )}
@@ -633,7 +633,7 @@ export default function PetDetailsClient({ petId }) {
               </div>
             </motion.div>
 
-            {/* Additional details section - Refined and removed status and publish date */}
+            {/* Additional details section - Simplified into clean cards */}
             <motion.div 
               className="bg-white rounded-3xl p-6 space-y-4 shadow-md border border-gray-100"
               initial={{ opacity: 0, y: 20 }}
@@ -642,54 +642,33 @@ export default function PetDetailsClient({ petId }) {
             >
               <h2 className="text-xl font-semibold">Additional Details</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Animal Type Column */}
-                <div className="space-y-4">
-                  {pet.type && (
-                    <div className="bg-slate-50 p-4 rounded-xl">
-                      <div className="text-sm text-slate-500 mb-1">Animal Type</div>
-                      <div className="font-medium">{pet.type}</div>
-                    </div>
-                  )}
-                  
-                  {pet.coat && (
-                    <div className="bg-slate-50 p-4 rounded-xl">
-                      <div className="text-sm text-slate-500 mb-1">Coat Length</div>
-                      <div className="font-medium">{pet.coat}</div>
-                    </div>
-                  )}
-                  
-                  {breeds.mixed !== null && (
-                    <div className="bg-slate-50 p-4 rounded-xl">
-                      <div className="text-sm text-slate-500 mb-1">Mixed Breed</div>
-                      <div className="font-medium">{breeds.mixed ? 'Yes' : 'No'}</div>
-                    </div>
-                  )}
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {pet.breeds.primary && (
+                  <div className="bg-slate-50 p-4 rounded-xl">
+                    <div className="text-sm text-slate-500 mb-1">Breed</div>
+                    <div className="font-medium">{pet.breeds.primary}</div>
+                    {pet.breeds.secondary && (
+                      <div className="text-sm text-slate-600 mt-1">Mix: {pet.breeds.secondary}</div>
+                    )}
+                  </div>
+                )}
                 
-                {/* Colors Column */}
-                <div className="space-y-4">
-                  {pet.colors && pet.colors.primary && (
-                    <div className="bg-slate-50 p-4 rounded-xl">
-                      <div className="text-sm text-slate-500 mb-1">Colors</div>
-                      <div className="font-medium">
-                        {pet.colors.primary}
-                        {pet.colors.secondary && <span>, {pet.colors.secondary}</span>}
-                        {pet.colors.tertiary && <span>, {pet.colors.tertiary}</span>}
-                      </div>
+                {pet.coat && (
+                  <div className="bg-slate-50 p-4 rounded-xl">
+                    <div className="text-sm text-slate-500 mb-1">Coat</div>
+                    <div className="font-medium">{pet.coat}</div>
+                  </div>
+                )}
+
+                {pet.colors?.primary && (
+                  <div className="bg-slate-50 p-4 rounded-xl">
+                    <div className="text-sm text-slate-500 mb-1">Color</div>
+                    <div className="font-medium">
+                      {pet.colors.primary}
+                      {pet.colors.secondary && ` & ${pet.colors.secondary}`}
                     </div>
-                  )}
-                  
-                  {breeds.primary && (
-                    <div className="bg-slate-50 p-4 rounded-xl">
-                      <div className="text-sm text-slate-500 mb-1">Breed</div>
-                      <div className="font-medium">
-                        {breeds.primary}
-                        {breeds.secondary && <span> / {breeds.secondary}</span>}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </motion.div>
 

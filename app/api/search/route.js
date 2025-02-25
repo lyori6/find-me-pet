@@ -20,24 +20,62 @@ export async function GET(request) {
       const types = petTypes.split(',')
         .filter(Boolean)
         .map(type => {
-          // Ensure proper capitalization for Petfinder API
-          const singular = type.toLowerCase().endsWith('s') ? type.slice(0, -1) : type;
-          return singular.charAt(0).toUpperCase() + singular.slice(1).toLowerCase();
+          // First convert to singular form if plural
+          const singular = type.toLowerCase().replace(/s$/, '');
+          // Then capitalize first letter
+          return singular.charAt(0).toUpperCase() + singular.slice(1);
         });
       
       if (types.length > 0) {
-        // Petfinder API expects a single type parameter for each type
-        const typeQueries = types.map(type => `type=${type}`);
-        apiUrl += `&${typeQueries.join('&')}`;
+        // Make a separate API call for each type and combine results
+        const promises = types.map(type => {
+          const typeUrl = `${apiUrl}&type=${type}`;
+          console.log('Fetching from Petfinder API:', typeUrl);
+          return fetch(typeUrl, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }).then(resp => resp.json());
+        });
+
+        // Wait for all requests to complete
+        const results = await Promise.all(promises);
+        
+        // Combine and deduplicate results
+        const allAnimals = results.flatMap(result => result.animals || []);
+        const uniqueAnimals = [...new Map(allAnimals.map(animal => [animal.id, animal])).values()];
+        
+        // Sort by distance since we're combining multiple requests
+        const sortedAnimals = uniqueAnimals.sort((a, b) => a.distance - b.distance);
+        
+        // Return combined results
+        return new Response(JSON.stringify({
+          pagination: {
+            count: sortedAnimals.length,
+            total_count: results.reduce((sum, r) => sum + (r.pagination?.total_count || 0), 0)
+          },
+          animals: sortedAnimals
+        }), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=60, stale-while-revalidate=300'
+          }
+        });
       }
     }
     
-    console.log('Fetching from Petfinder API:', apiUrl); // Add logging for debugging
+    // If no types specified or empty types array, make a single request
+    console.log('Fetching from Petfinder API:', apiUrl);
     
+    // Add cache-control header to enable caching for 5 minutes
     const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
+      },
+      next: {
+        revalidate: 300 // Cache for 5 minutes
       }
     });
     
@@ -47,7 +85,21 @@ export async function GET(request) {
     }
     
     const data = await response.json();
-    return Response.json(data);
+    
+    // Add logging to debug the response
+    console.log('Petfinder API Response:', {
+      total: data.pagination?.total_count,
+      count: data.animals?.length,
+      firstAnimal: data.animals?.[0]
+    });
+    
+    // Return response with cache headers
+    return new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      }
+    });
   } catch (error) {
     console.error('Error fetching pets:', error);
     return Response.json(
