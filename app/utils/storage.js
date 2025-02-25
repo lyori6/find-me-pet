@@ -28,4 +28,26 @@ export function getZipCode() {
  */
 export function validateZipCode(zipCode) {
   return /^\d{5}$/.test(zipCode);
-} 
+}
+
+/**
+ * Save selected pet types to localStorage
+ * @param {array} petTypes - The pet types to save
+ */
+export const saveSelectedPetTypes = (petTypes) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('selectedPetTypes', JSON.stringify(petTypes));
+  }
+};
+
+/**
+ * Get selected pet types from localStorage
+ * @returns {array} The saved pet types or an empty array if not found
+ */
+export const getSelectedPetTypes = () => {
+  if (typeof window !== 'undefined') {
+    const savedTypes = localStorage.getItem('selectedPetTypes');
+    return savedTypes ? JSON.parse(savedTypes) : [];
+  }
+  return [];
+};
