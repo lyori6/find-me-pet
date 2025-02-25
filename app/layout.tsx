@@ -2,6 +2,7 @@ import type React from "react"
 import "@/styles/globals.css"
 import localFont from "next/font/local"
 import Link from "next/link"
+import { Providers } from './providers';
 
 const sfPro = localFont({
   src: [
@@ -37,22 +38,24 @@ export default function RootLayout({
   return (
     <html lang="en" className={sfPro.variable}>
       <body className="font-sans">
-        <header className="bg-background shadow-sm">
-          <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-primary">
-              PetMatch
-            </Link>
-            <div className="space-x-4">
-              <Link href="/" className="text-foreground hover:text-primary transition-colors">
-                Home
+        <Providers>
+          <header className="bg-background shadow-sm">
+            <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
+              <Link href="/" className="text-2xl font-bold text-primary">
+                PetMatch
               </Link>
-              <Link href="/questionnaire" className="text-foreground hover:text-primary transition-colors">
-                Find a Pet
-              </Link>
-            </div>
-          </nav>
-        </header>
-        <main className="container mx-auto px-4 py-8">{children}</main>
+              <div className="space-x-4">
+                <Link href="/" className="text-foreground hover:text-primary transition-colors">
+                  Home
+                </Link>
+                <Link href="/questionnaire" className="text-foreground hover:text-primary transition-colors">
+                  Find a Pet
+                </Link>
+              </div>
+            </nav>
+          </header>
+          <main className="container mx-auto px-4 py-8">{children}</main>
+        </Providers>
       </body>
     </html>
   )

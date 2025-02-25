@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,23 +36,67 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
     return /^\d{5}$/.test(zip)
   }
 
-  const handleGeolocation = () => {
+  const handleGeolocation = async () => {
     setIsLocating(true)
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // In a real app, you'd use a reverse geocoding service here
-          setZipCode("12345")
-          setIsLocating(false)
-        },
-        (error) => {
-          console.error("Error getting location:", error.message)
-          alert("Unable to retrieve your location. Please enter your zip code manually.")
-          setIsLocating(false)
-        },
+    setError("")
+
+    try {
+      console.log("Starting location detection...")
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (!("geolocation" in navigator)) {
+          reject(new Error("Geolocation is not supported"))
+          return
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        })
+      })
+
+      const { latitude, longitude } = position.coords
+      console.log("Got coordinates:", { latitude, longitude })
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`,
+        {
+          headers: {
+            "Accept": "application/json",
+            "User-Agent": "FindMePet/1.0"
+          }
+        }
       )
-    } else {
-      alert("Geolocation is not supported by your browser. Please enter your zip code manually.")
+
+      if (!response.ok) {
+        throw new Error(`Location API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("Location API response:", data)
+
+      const postalCode = data.address?.postcode
+      console.log("Found postal code:", postalCode)
+
+      if (!postalCode) {
+        throw new Error("No postal code found")
+      }
+
+      const cleanPostalCode = postalCode.replace(/\D/g, "").slice(0, 5)
+      console.log("Cleaned postal code:", cleanPostalCode)
+
+      if (!validateZipCode(cleanPostalCode)) {
+        throw new Error(`Invalid postal code format: ${cleanPostalCode}`)
+      }
+
+      setZipCode(cleanPostalCode)
+    } catch (err) {
+      console.error("Location error:", err)
+      setError(
+        err instanceof GeolocationPositionError && err.code === 1
+          ? "Please enable location access in your browser settings"
+          : "Could not detect your location. Please enter your zip code manually."
+      )
+    } finally {
       setIsLocating(false)
     }
   }
@@ -62,34 +105,47 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-      className="w-full max-w-md mx-auto"
+      className="w-full max-w-md mx-auto space-y-4"
     >
-      <h2 className="text-2xl font-bold mb-6 text-center">Where are you located?</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Input
             type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="Enter your US zip code"
+            placeholder="Enter your zip code"
             value={zipCode}
             onChange={handleZipCodeChange}
+            maxLength={5}
             className="w-full"
+            disabled={isLocating}
           />
           {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         </div>
-        <div className="flex justify-between items-center">
-          <Button type="button" onClick={handleGeolocation} variant="outline" disabled={isLocating} className="w-1/2">
-            {isLocating ? "Locating..." : "Locate Me"}
-          </Button>
-          <Button type="submit" className="w-1/2 ml-4" disabled={!validateZipCode(zipCode)}>
+        <div className="space-y-2">
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!validateZipCode(zipCode) || isLocating}
+          >
             Continue
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGeolocation}
+            disabled={isLocating}
+          >
+            {isLocating ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current"></div>
+                <span>Detecting location...</span>
+              </div>
+            ) : (
+              "Use my location"
+            )}
           </Button>
         </div>
       </form>
     </motion.div>
   )
 }
-
