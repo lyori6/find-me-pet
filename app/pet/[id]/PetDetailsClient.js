@@ -8,7 +8,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { decode } from 'html-entities';
 import { petsCache } from '@/app/utils/cache';
-import IOSGallery, { IOSLightbox } from '@/app/components/IOSGallery';
+import SimpleGallery, { SimpleLightbox } from '@/app/components/SimpleGallery';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -352,7 +352,7 @@ export default function PetDetailsClient({ petId }) {
         <div className="flex flex-col lg:flex-row-reverse gap-8">
           {/* Image section - now on right for desktop */}
           <div className="w-full lg:w-1/2 xl:w-2/5 lg:sticky lg:top-24 lg:self-start">
-            {/* Photo Gallery - iOS inspired design */}
+            {/* Photo Gallery - simplified design */}
             {hasPhotos && (
               <motion.div 
                 className="w-full mb-6"
@@ -360,12 +360,14 @@ export default function PetDetailsClient({ petId }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <IOSGallery 
+                <SimpleGallery 
                   photos={photos} 
                   petName={name}
-                  startIndex={activePhotoIndex}
-                  className="rounded-3xl overflow-hidden shadow-lg"
-                  onImageClick={(index) => openLightbox(index)}
+                  className="shadow-lg"
+                  onImageClick={(index) => {
+                    setActivePhotoIndex(index);
+                    setIsLightboxOpen(true);
+                  }}
                 />
 
                 {/* Thumbnails for desktop */}
@@ -379,7 +381,10 @@ export default function PetDetailsClient({ petId }) {
                     {photos.map((photo, index) => (
                       <motion.button
                         key={`photo-${index}`}
-                        onClick={() => openLightbox(index)}
+                        onClick={() => {
+                          setActivePhotoIndex(index);
+                          setIsLightboxOpen(true);
+                        }}
                         className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-200 ${
                           index === activePhotoIndex ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-100'
                         }`}
@@ -690,8 +695,8 @@ export default function PetDetailsClient({ petId }) {
         </div>
       </div>
 
-      {/* Lightbox for enlarged images - iOS inspired */}
-      <IOSLightbox
+      {/* Lightbox for enlarged images - simplified */}
+      <SimpleLightbox
         isOpen={isLightboxOpen}
         onClose={closeLightbox}
         photos={photos}

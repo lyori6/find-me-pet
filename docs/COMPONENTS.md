@@ -63,15 +63,15 @@ interface PetCardProps {
 <PetCard animal={animalData} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-2" />
 ```
 
-### iOS Gallery
+### Simple Gallery
 
-**File**: `/app/components/IOSGallery.js`
+**File**: `/app/components/SimpleGallery.js`
 
-**Purpose**: Provides an iOS-inspired, smooth and interactive gallery for displaying pet images with swipe navigation and lightbox functionality.
+**Purpose**: Provides a lightweight, responsive gallery component for displaying pet images with intuitive navigation and lightbox functionality.
 
 **Props**:
 ```typescript
-interface IOSGalleryProps {
+interface SimpleGalleryProps {
   photos: {
     small: string;
     medium: string;
@@ -79,37 +79,34 @@ interface IOSGalleryProps {
     full: string;
   }[];
   petName?: string;
-  onClose?: () => void;
-  startIndex?: number;
   className?: string;
-  isLightbox?: boolean;
   onImageClick?: (index: number) => void;
 }
 ```
 
 **Key Features**:
-- iOS-inspired squishy animations with spring physics
-- Swipeable navigation on mobile and desktop
-- Responsive design that adapts to different screen sizes
-- Keyboard navigation support (arrow keys, escape)
-- Accessible controls with proper ARIA attributes
+- Fixed aspect ratio design (4:3) that works reliably across all devices
+- Touch swipe navigation for mobile users
+- Large, accessible navigation buttons
+- Image counter in bottom-right corner
+- Responsive design with proper image loading
 - Lightbox mode for enlarged viewing
 - Optimized image loading with Next.js Image
 
 **Usage Example**:
 ```jsx
 // Basic usage
-<IOSGallery 
+<SimpleGallery 
   photos={pet.photos} 
   petName={pet.name}
-  className="rounded-3xl overflow-hidden shadow-lg"
+  className="shadow-lg"
 />
 
 // With lightbox functionality
 const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 const [activeIndex, setActiveIndex] = useState(0);
 
-<IOSGallery 
+<SimpleGallery 
   photos={pet.photos} 
   petName={pet.name}
   onImageClick={(index) => {
@@ -118,7 +115,7 @@ const [activeIndex, setActiveIndex] = useState(0);
   }}
 />
 
-<IOSLightbox
+<SimpleLightbox
   isOpen={isLightboxOpen}
   onClose={() => setIsLightboxOpen(false)}
   photos={pet.photos}
@@ -126,9 +123,6 @@ const [activeIndex, setActiveIndex] = useState(0);
   startIndex={activeIndex}
 />
 ```
-
-**Additional Documentation**:
-For detailed design guidelines and implementation details, see [GALLERY-DESIGN.md](/docs/GALLERY-DESIGN.md).
 
 ### Progressive Question
 

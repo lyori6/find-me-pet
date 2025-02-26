@@ -41,10 +41,11 @@ findmepet/
 - **SSR & SSG**: Shows ways to handle data when rendering pages with Next.js.
 
 ## Features
-- **Pet Catalog**: A listing of pets with images, short descriptions, and relevant details.
-- **Search & Filtering**: Lets users quickly narrow down the catalog by various criteria.
-- **Responsive UI**: Works well on both desktop and mobile devices.
-- **Performance-focused**: Takes advantage of Next.js optimizations for a snappy user experience.
+- **Pet Type Selection**: Filter searches by dogs, cats, rabbits, or any combination
+- **Location-Based Search**: Find pets near you with zip code detection
+- **AI-Powered Recommendations**: Get personalized pet matches using GPT-4o-mini
+- **Responsive Gallery**: Browse beautiful photos with touch-friendly navigation and lightbox view
+- **Mobile-First Design**: Enjoy a responsive, intuitive interface
 
 ## Project Setup
 
@@ -75,6 +76,13 @@ Access the main page at http://localhost:3000. You can then browse through the p
 1. **Structure Matters**: Grouping components, pages, and utilities in logical directories keeps the codebase organized.
 2. **Type Safety**: TypeScript can significantly reduce errors by ensuring consistent data shapes.
 3. **API Integration**: Setting up a clear strategy for data fetching (SSR, SSG, or client-side) plays an important role in performance and user experience.
+
+## Technologies
+- **Frontend**: Next.js, React, TailwindCSS, Radix UI
+- **Animation & Interaction**: Framer Motion
+- **State Management**: React Context, localStorage
+- **APIs**: PetFinder API, OpenAI API
+- **Deployment**: Vercel
 
 ## Potential Future Improvements
 - **Authentication**: Let users save pets or make adoption inquiries.
