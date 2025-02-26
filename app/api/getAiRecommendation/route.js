@@ -1,133 +1,307 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client with better error handling for token issues
+const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  
+  if (!apiKey) {
+    console.error('OPENAI_API_KEY is not defined in environment variables');
+    throw new Error('OpenAI API key is missing');
+  }
+  
+  return new OpenAI({
+    apiKey,
+    maxRetries: 3, // Add retries for transient errors
+    timeout: 60000, // Increase timeout to 60 seconds
+  });
+};
+
+// Get a fresh client for each request
+const getClient = () => {
+  try {
+    return getOpenAIClient();
+  } catch (error) {
+    console.error('Failed to initialize OpenAI client:', error);
+    throw error;
+  }
+};
 
 export async function POST(request) {
   try {
-    // Parse the request body
-    const body = await request.json();
-    const { selectedTypes, zipCode, filteredAnimals } = body;
+    // Get a fresh client for each request to avoid token expiration issues
+    const openai = getClient();
     
-    if (!filteredAnimals || !Array.isArray(filteredAnimals)) {
-      return Response.json({ error: 'Invalid data format. Animals data is required.' }, { status: 400 });
+    // Extract data from the request
+    const { selectedTypes, zipCode, filteredAnimals } = await request.json();
+    
+    // Add detailed debugging
+    console.log('API REQUEST DETAILS:');
+    console.log('- Zip Code:', zipCode);
+    console.log('- Selected Types:', selectedTypes);
+    console.log('- Number of filtered animals:', filteredAnimals?.length || 'None');
+    
+    // Check if we actually have pet data
+    if (!filteredAnimals || !Array.isArray(filteredAnimals) || filteredAnimals.length === 0) {
+      console.log('- No pets available in request');
+      return Response.json({ 
+        error: "No animals provided in the request" 
+      }, { status: 400 });
     }
-
-    // Sample pets (limit to 5 for reasonable prompt size)
-    const petSamples = filteredAnimals.slice(0, 5).map(animal => ({
-      id: animal.id,
-      name: animal.name,
-      type: animal.type,
-      breed: animal.breeds?.primary || 'Unknown',
-      age: animal.age || 'Unknown',
-      size: animal.size || 'Unknown',
-      characteristics: [
-        animal.colors?.primary,
-        animal.attributes?.spayed_neutered ? 'fixed' : 'not fixed',
-        animal.attributes?.house_trained ? 'house trained' : 'not house trained',
-        ...Object.entries(animal.environment || {})
-          .filter(([_, value]) => value === true)
-          .map(([key]) => `good with ${key}`)
-      ].filter(Boolean)
+    
+    // Log a sample pet to verify data structure
+    const samplePet = filteredAnimals[0];
+    console.log('- Sample pet:', JSON.stringify({
+      id: samplePet.id,
+      name: samplePet.name,
+      type: samplePet.type
     }));
-
-    // Construct the prompt based on user preferences
+    
+    // Normalize the pet types for comparison
+    const normalizeType = (type) => {
+      if (!type) return '';
+      type = String(type).toLowerCase().trim();
+      // Handle singular/plural forms
+      if (type === 'dogs') return 'dog';
+      if (type === 'cats') return 'cat';
+      if (type === 'rabbits') return 'rabbit';
+      return type;
+    };
+    
+    // Get normalized selected types
+    const normalizedSelectedTypes = (selectedTypes || []).map(normalizeType);
+    console.log('Normalized selected types:', normalizedSelectedTypes);
+    
+    // Prepare pet data in a clear, structured format
+    const petData = filteredAnimals.slice(0, 10).map((animal, index) => {
+      const normalizedType = normalizeType(animal.type);
+      
+      // Include the animal in the filtered list if it matches the selected types
+      // If no types are selected, include all animals
+      const matchesSelectedType = normalizedSelectedTypes.length === 0 || 
+                                 normalizedSelectedTypes.includes(normalizedType);
+                                 
+      if (matchesSelectedType) {
+        console.log(`Including pet ${animal.name} (${animal.id}) of type ${animal.type} in the recommendation data`);
+      }
+      
+      return {
+        id: animal.id,
+        name: animal.name,
+        type: animal.type,
+        breed: animal.breeds?.primary || 'Unknown',
+        age: animal.age || 'Unknown',
+        size: animal.size || 'Medium',
+        gender: animal.gender || 'Unknown',
+        characteristics: [
+          animal.colors?.primary ? `${animal.colors.primary} color` : null,
+          animal.attributes?.spayed_neutered ? 'fixed' : null,
+          animal.attributes?.house_trained ? 'house trained' : null,
+          animal.environment?.children === true ? 'good with children' : null,
+          animal.environment?.dogs === true ? 'good with dogs' : null,
+          animal.environment?.cats === true ? 'good with cats' : null,
+        ].filter(Boolean).join(', '),
+        matchesType: matchesSelectedType
+      };
+    });
+    
+    // Filter to only include pets that match the selected types
+    const matchingPets = petData.filter(pet => pet.matchesType);
+    
+    // If we have no matching pets, use all pets
+    const petsToRecommend = matchingPets.length > 0 ? matchingPets : petData;
+    
+    console.log(`Found ${petsToRecommend.length} pets matching the criteria out of ${petData.length} total`);
+    
+    // Format the pet data as a clear, numbered list for the AI
+    const formattedPetList = petsToRecommend.map((pet, i) => 
+      `${i+1}. ${pet.name} (ID: ${pet.id})
+  - Type: ${pet.type}
+  - Breed: ${pet.breed}
+  - Age: ${pet.age}
+  - Size: ${pet.size}
+  - Gender: ${pet.gender}
+  - Characteristics: ${pet.characteristics || 'None specified'}`
+    ).join('\n\n');
+    
+    // Create a clear, concise prompt
     const petType = selectedTypes && selectedTypes.length > 0 
       ? selectedTypes.join(' or ') 
       : 'any pet';
-    
-    const prompt = `
-You are a helpful pet adoption assistant. A user is searching for ${petType} in zip code ${zipCode}.
-Here are 5 pets that match their initial search criteria:
+      
+    const promptTemplate = `
+I am looking for ${petType} near ${zipCode}.
 
-${petSamples.map((pet, index) => `
-${index + 1}. ${pet.name} (ID: ${pet.id}):
-   - Type: ${pet.type}
-   - Breed: ${pet.breed}
-   - Age: ${pet.age}
-   - Size: ${pet.size}
-   - Characteristics: ${pet.characteristics.join(', ')}
-`).join('\n')}
+Here are the available pets to choose from - ONLY recommend one from this list:
 
+${formattedPetList}
+
+${process.env.OPENAI_PROMPT || `
 Based on these available animals, provide a single recommendation for the best match. Your response should:
 1. Select ONE specific pet from the list above
 2. Provide a friendly, compassionate explanation (2-3 sentences) of why this pet might be a good match
-3. Include 3 specific matching qualities (expressed as percentages between 70-95%) that make this pet a good companion
+3. Include 3 specific matching qualities (expressed as percentages between 70-95%) that make this pet a good companion.
 
 Your response should ONLY include:
 - Name of the selected pet
 - Brief explanation of why it's a good match
-- Three match qualities with percentages
+- Three match qualities with percentages.
 
 DO NOT include any other information. Keep your response concise and focused.
+`}
 `;
 
-    // Generate the AI recommendation 
+    // Generate the AI recommendation with improved system message
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o-mini", // Using the more reliable model
       messages: [
-        { role: "system", content: "You are a helpful pet adoption assistant." },
-        { role: "user", content: prompt }
+        { 
+          role: "system", 
+          content: `
+You are a helpful pet adoption assistant who recommends the perfect pet match from a list of available animals.
+
+IMPORTANT RULES:
+1. You MUST ONLY recommend pets from the numbered list provided - no exceptions
+2. You MUST include the pet's exact name as provided in the list
+3. You MUST provide 3 matching qualities with percentages between 70-95%
+4. DO NOT apologize, give disclaimers, or add additional commentary
+5. DO NOT mention that you're an AI or that you're selecting from a list
+6. DO NOT make up information not included in the list
+
+Format your recommendation exactly like this example:
+---
+I recommend Bella.
+
+Bella would be a perfect companion because she's a friendly and affectionate cat who enjoys cuddles and playtime. Her gentle nature makes her ideal for a family seeking a loving pet.
+
+Affectionate: 85%
+Playfulness: 80%
+Gentleness: 90%
+---
+` 
+        },
+        { role: "user", content: promptTemplate }
       ],
-      max_tokens: 200,
+      max_tokens: 350,
       temperature: 0.7,
     });
 
     // Extract the response text
     const recommendationText = completion.choices[0].message.content.trim();
     
-    // Parse the recommendation text to extract structured data
-    // Note: This parsing is simplified and may need refinement
-    const lines = recommendationText.split('\n').filter(line => line.trim());
+    // Log the raw AI response for debugging
+    console.log('Raw AI recommendation response:', recommendationText);
     
-    // Try to extract pet name (usually the first line or starts with "Name:")
-    let petName = filteredAnimals[0].name; // Default fallback
-    let matchReason = "";
-    const stats = [];
+    // Extract pet name from the response - look for "I recommend [Name]" pattern
+    const nameMatch = recommendationText.match(/I recommend ([^\.]+)/i);
+    let petName = nameMatch ? nameMatch[1].trim() : null;
     
-    // Basic parsing logic (this could be improved with regex for better extraction)
-    for (const line of lines) {
-      if (line.includes(':')) {
-        const [key, value] = line.split(':').map(s => s.trim());
-        if (key.toLowerCase().includes('name')) {
-          petName = value;
+    // If no name match, try to find a name at the beginning of a line
+    if (!petName) {
+      const lines = recommendationText.split('\n');
+      for (let line of lines) {
+        line = line.trim();
+        if (line && !line.toLowerCase().startsWith('i recommend') && line.length < 30) {
+          // Check if this line matches any pet names
+          const matchingPet = petsToRecommend.find(pet => 
+            line.toLowerCase().includes(pet.name.toLowerCase())
+          );
+          if (matchingPet) {
+            petName = matchingPet.name;
+            break;
+          }
         }
-      } else if (line.includes('%')) {
-        // This is likely a stat
-        const match = line.match(/(.+?)(\d+)%/);
-        if (match) {
-          stats.push({
-            label: match[1].trim(),
-            value: parseInt(match[2], 10)
-          });
-        }
-      } else if (line.length > 20 && !line.startsWith('-')) {
-        // This is likely the match reason
-        matchReason = line;
       }
     }
     
+    // If still no pet name, use the first pet as fallback
+    if (!petName && petsToRecommend.length > 0) {
+      console.log("Could not extract pet name from AI response, using first pet as fallback");
+      petName = petsToRecommend[0].name;
+    }
+    
+    // Find the pet ID by matching the name
+    let petId = null;
+    const matchingPet = petsToRecommend.find(pet => 
+      pet.name.toLowerCase() === (petName || '').toLowerCase()
+    );
+    
+    if (matchingPet) {
+      petId = matchingPet.id;
+      console.log(`Found matching pet ID ${petId} for name ${petName}`);
+    } else if (petsToRecommend.length > 0) {
+      // If no matching pet, use the first one as fallback
+      petId = petsToRecommend[0].id;
+      petName = petsToRecommend[0].name;
+      console.log(`No pet matched by name. Using first pet ${petName} (${petId}) as fallback`);
+    }
+    
+    // Extract reason for the match - everything between the name and the stats
+    let matchReason = '';
+    if (petName) {
+      const nameIndex = recommendationText.toLowerCase().indexOf(petName.toLowerCase());
+      if (nameIndex !== -1) {
+        const afterName = recommendationText.substring(nameIndex + petName.length);
+        // Find the first occurrence of a percentage pattern
+        const percentIndex = afterName.search(/\d+\s*%/);
+        if (percentIndex !== -1) {
+          matchReason = afterName.substring(0, percentIndex).trim();
+          // Clean up the match reason
+          matchReason = matchReason.replace(/^\W+|\W+$/g, ''); // Remove leading/trailing non-word chars
+        } else {
+          // If no percentage found, try to use everything up to newlines
+          const newlineIndex = afterName.indexOf('\n\n');
+          if (newlineIndex !== -1) {
+            matchReason = afterName.substring(0, newlineIndex).trim();
+          } else {
+            matchReason = afterName.trim();
+          }
+        }
+      }
+    }
+    
+    // Extract stats with percentages
+    const stats = [];
+    const statsRegex = /([A-Za-z\s]+):\s*(\d+)\s*%/g;
+    let statsMatch;
+    while ((statsMatch = statsRegex.exec(recommendationText)) !== null) {
+      stats.push({
+        label: statsMatch[1].trim(),
+        value: parseInt(statsMatch[2])
+      });
+    }
+    
+    // Create default stats if none were found
+    if (stats.length === 0) {
+      console.log("No stats found in AI response, using defaults");
+      stats.push(
+        { label: "Compatibility", value: 85 },
+        { label: "Adaptability", value: 80 },
+        { label: "Care Level", value: 75 }
+      );
+    }
+    
+    // Limit to 3 stats
+    const limitedStats = stats.slice(0, 3);
+    
+    // Create the final recommendation object
+    const recommendation = {
+      petId,
+      petName,
+      matchReason: matchReason || `${petName} would be a great companion for your home based on your preferences.`,
+      stats: limitedStats
+    };
+    
     // Return the structured recommendation
     return Response.json({
-      recommendation: {
-        petName,
-        matchReason: matchReason || `${petName} seems like a great fit for your lifestyle!`,
-        stats: stats.length ? stats : [
-          { label: "Compatibility", value: 85 },
-          { label: "Adaptability", value: 80 },
-          { label: "Care Level", value: 75 }
-        ]
-      },
+      recommendation,
       rawResponse: recommendationText
     });
     
   } catch (error) {
     console.error('Error generating AI recommendation:', error);
-    return Response.json(
-      { error: 'Failed to generate recommendation. Please try again later.' },
-      { status: 500 }
-    );
+    
+    return Response.json({ 
+      error: "Failed to generate AI recommendation: " + (error.message || "Unknown error")
+    }, { status: 500 });
   }
 }

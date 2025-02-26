@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getZipCode } from '../utils/storage';
+import { petsCache } from '../utils/cache';
 import PetCard from '../components/PetCard';
 import { Button } from '@/components/ui/button';
 import AiRecommendation from '@/components/ai-recommendation';
@@ -28,9 +29,6 @@ export default function ResultsClient({ initialZipCode }) {
   
   // Add pagination state
   const [displayCount, setDisplayCount] = useState(12);
-
-  // Simple cache key based on search parameters
-  const cacheKey = `pets-cache-${zipCode}-${selectedPetTypes.join(',')}`;
 
   // Initialize state from URL parameters
   useEffect(() => {
@@ -63,21 +61,12 @@ export default function ResultsClient({ initialZipCode }) {
       setLoading(true); // Set loading at the start
       setError(null);
 
-      // Check sessionStorage cache first
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const { data, timestamp } = JSON.parse(cached);
-          // Cache is valid for 5 minutes
-          if (Date.now() - timestamp < 5 * 60 * 1000) {
-            setPets(data);
-            setLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.warn('Cache error:', e);
-          sessionStorage.removeItem(cacheKey);
-        }
+      // Check cache first using the new utility
+      const cachedResults = petsCache.getSearchResults(zipCode, selectedPetTypes);
+      if (cachedResults) {
+        setPets(cachedResults);
+        setLoading(false);
+        return;
       }
 
       const petTypesQuery = selectedPetTypes.length > 0 
@@ -97,6 +86,8 @@ export default function ResultsClient({ initialZipCode }) {
         setPets([]);
       } else {
         setPets(data.animals);
+        // Cache the results using the new utility
+        petsCache.setSearchResults(zipCode, selectedPetTypes, data.animals);
       }
     } catch (err) {
       setError(err.message);

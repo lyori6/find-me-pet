@@ -4,6 +4,7 @@ This file provides a template for the required environment variables in the `.en
 
 # OpenAI API key for AI recommendations
 OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_PROMPT=our_openai_prompt_here
 
 # Cloudflare credentials
 CLOUDFLARE_API_KEY=your_cloudflare_api_key_here

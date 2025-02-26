@@ -1,4 +1,4 @@
-import { getAccessToken, resetTokenCache } from '@/app/utils/petfinder';
+import { getAccessToken, resetTokenCache, getAnimal } from '@/app/utils/petfinder';
 
 // Helper function to generate enhanced descriptions
 function enhanceDescription(pet) {
@@ -101,52 +101,33 @@ export async function GET(request, { params }) {
   }
   
   try {
-    // First attempt with possibly cached token
-    let token = await getAccessToken();
-    let response = await fetch(
-      `https://api.petfinder.com/v2/animals/${petId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    // Use the utility function from petfinder.js instead of implementing token refresh here
+    const animal = await getAnimal(petId);
     
-    // If the first attempt fails with a 401, try again by forcing a new token
-    if (response.status === 401) {
-      console.log('Token expired, requesting a new one...');
-      // Force token cache to expire so we get a fresh token
-      resetTokenCache();
-      token = await getAccessToken(true);
-      
-      // Retry the request with the new token
-      response = await fetch(
-        `https://api.petfinder.com/v2/animals/${petId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+    // Enhance the pet description
+    const enhancedAnimal = enhanceDescription(animal);
+    
+    return Response.json(enhancedAnimal);
+  } catch (error) {
+    console.error('Error fetching pet details:', error);
+    
+    // Check if the error is related to token issues
+    if (error.message && error.message.includes('token')) {
+      return Response.json(
+        { 
+          error: `Authorization error with pet service. Please try again later.`,
+          details: error.message
+        },
+        { status: 401 }
       );
     }
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to fetch pet details from Petfinder API');
-    }
-    
-    const data = await response.json();
-    
-    // Enhance the pet description
-    data.animal = enhanceDescription(data.animal);
-    
-    return Response.json(data);
-  } catch (error) {
-    console.error('Error fetching pet details:', error);
+    // General error handling
     return Response.json(
-      { error: `Error fetching pet details: ${error.message}` },
+      { 
+        error: `Error fetching pet details. Please try again later.`,
+        details: error.message
+      },
       { status: 500 }
     );
   }

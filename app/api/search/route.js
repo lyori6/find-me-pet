@@ -107,15 +107,30 @@ export async function GET(request) {
       resetTokenCache();
       token = await getAccessToken(true);
       
-      response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        next: {
-          revalidate: 300 // Cache for 5 minutes
+      try {
+        const retryResponse = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!retryResponse.ok) {
+          if (retryResponse.status === 401) {
+            throw new Error('Access token invalid or expired even after refresh');
+          } else {
+            const errorData = await retryResponse.json();
+            throw new Error(errorData.detail || errorData.title || 'Failed to search for pets');
+          }
         }
-      });
+        
+        const retryData = await retryResponse.json();
+        return retryData;
+      } catch (retryError) {
+        console.error('Error searching pets after token refresh:', retryError);
+        throw retryError;
+      }
     }
     
     if (!response.ok) {

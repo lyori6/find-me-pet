@@ -45,6 +45,9 @@ export default function QuestionnairePage() {
       saveZipCode(formData.zipCode)
     }
     
+    // Set flag to indicate we're coming from the questionnaire flow
+    sessionStorage.setItem("comingFromQuestionnaire", "true")
+    
     // Handle pet types
     const petTypesParam = formData.petTypes.length === 3 ? 'any' : formData.petTypes.join(',')
     
