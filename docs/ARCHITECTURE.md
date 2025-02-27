@@ -58,23 +58,40 @@ FindMePet follows a client-side rendered architecture built on Next.js with the 
 ### Search Flow
 
 ```
-┌───────────┐    ┌───────────┐    ┌───────────┐    ┌───────────┐
-│  Pet Type │    │  Location │    │  API Call │    │  Results  │
-│ Selection │───►│   Input   │───►│ Processing│───►│  Display  │
-└───────────┘    └───────────┘    └───────────┘    └───────────┘
-                                        │
-                                        ▼
-                                  ┌───────────┐
-                                  │    AI     │
-                                  │Processing │
-                                  └───────────┘
-                                        │
-                                        ▼
-                                  ┌───────────┐
-                                  │    AI     │
-                                  │Recommend. │
-                                  └───────────┘
+┌───────────────────────────────────────────────────────────┐
+│                         Search Flow                           │
+└───────────────────────────┬───────────────────────────────────┘
+                            │
+                  ┌─────────┴────────────┐
+                  │                      │
+        ┌─────────▼─────────┐   ┌────────▼─────────┐
+        │  Standard Search   │   │   Quick Search   │
+        │       Flow        │   │      Flow        │
+        └─────────┬─────────┘   └────────┬─────────┘
+                  │                      │
+        ┌─────────▼─────────┐   ┌────────▼─────────┐
+        │ AI Recommendation │   │ Filter-Enabled   │
+        │    Results        │   │    Results       │
+        └───────────────────┘   └──────────────────┘
 ```
+
+### Parallel Search Flows
+
+The application implements two parallel search flows that share common components but provide different user experiences:
+
+1. **Standard Search Flow**
+   - Step-by-step guided search process
+   - Pet type selection followed by zip code entry
+   - Results displayed with AI-powered recommendations
+   - Filter buttons locked to focus attention on recommendations
+
+2. **Quick Search Flow**
+   - Streamlined search process via navigation button
+   - Skips pet type selection when zip code is available
+   - Results displayed with enabled filter functionality at `/alt-results`
+   - No AI recommendations to maintain simple browsing experience
+
+This dual-flow approach allows the application to serve different user preferences while maintaining a consistent visual design and user experience. The implementation uses separate page components rather than conditional rendering to keep the codebase clean and maintainable.
 
 ### Data Persistence
 

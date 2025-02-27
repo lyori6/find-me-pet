@@ -45,6 +45,7 @@ findmepet/
 - **Location-Based Search**: Find pets near you with zip code detection
 - **AI-Powered Recommendations**: Get personalized pet matches using GPT-4o-mini
 - **Responsive Gallery**: Browse beautiful photos with touch-friendly navigation and lightbox view
+- **Parallel Search Flows**: Choose between AI-recommended pets or filter-enabled quick search
 - **Mobile-First Design**: Enjoy a responsive, intuitive interface
 
 ## Project Setup

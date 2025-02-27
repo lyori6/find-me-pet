@@ -20,7 +20,7 @@ export default function SearchPage() {
     
     if (validateZipCode(zipCode)) {
       saveZipCode(zipCode)
-      router.push(`/results?zipCode=${encodeURIComponent(zipCode)}`)
+      router.push(`/alt-results?zipCode=${encodeURIComponent(zipCode)}`)
     } else {
       setError('Please enter a valid 5-digit zip code')
     }
@@ -82,6 +82,7 @@ export default function SearchPage() {
       if (detectedZipCode && validateZipCode(detectedZipCode)) {
         setZipCode(detectedZipCode)
         saveZipCode(detectedZipCode)
+        router.push(`/alt-results?zipCode=${encodeURIComponent(detectedZipCode)}`)
       } else {
         throw new Error('Could not determine a valid zip code from your location')
       }

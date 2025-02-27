@@ -157,6 +157,51 @@ interface LocationStepProps {
 <LocationStep onSubmit={handleZipCodeSubmit} className="mt-4" />
 ```
 
+### QuickSearchButton
+
+**File**: `/components/ui/quick-search-button.jsx`
+
+**Purpose**: A button component that enables direct access to the filtered results page.
+
+**Behavior**:
+- Checks for a stored zip code in the browser's local storage
+- If a zip code exists, navigates to the alternative results page with filters enabled
+- If no zip code exists, navigates to the search page to collect zip code
+
+**Implementation Details**:
+- Uses client-side navigation with window.location.href
+- Provides loading state feedback during navigation
+
+**Example Usage**:
+```jsx
+<QuickSearchButton />
+```
+
+### FilteredResultsClient
+
+**File**: `/app/filtered-results/FilterResultsClient.js`
+
+**Purpose**: An alternative to the main results client that enables filter functionality.
+
+**Props**:
+```typescript
+interface FilteredResultsClientProps {
+  initialZipCode?: string;
+}
+```
+
+**Key Features**:
+- Displays pet search results in a responsive grid
+- Enables pet type filtering (dogs, cats, rabbits)
+- Implements pagination with "Load More" functionality
+- Shares caching mechanism with the standard results page
+- Excludes AI recommendation component
+
+**Implementation Details**:
+- Uses same API endpoints as the standard results page
+- Filter state updates trigger re-fetching of data
+- Uses the same PetCard component as the main results page
+
 ## UI Components
 
 The app uses a collection of UI primitive components built with Radix UI. These components provide the foundation for building more complex components with consistent styling and behavior.

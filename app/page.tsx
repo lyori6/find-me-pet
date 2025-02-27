@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import QuickSearchButton from '@/components/ui/quick-search-button'
 
 export default function Home() {
   return (
@@ -49,15 +50,7 @@ export default function Home() {
                   Start Your Journey
                 </Button>
               </Link>
-              <Link href="/search">
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="text-lg px-8 py-6 border-2 hover:bg-muted/50 transition-all"
-                >
-                  Quick Search
-                </Button>
-              </Link>
+              <QuickSearchButton />
             </motion.div>
             
             <motion.div
@@ -133,4 +126,3 @@ export default function Home() {
     </main>
   )
 }
-
