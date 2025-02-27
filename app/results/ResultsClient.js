@@ -240,12 +240,22 @@ export default function ResultsClient({ initialZipCode }) {
         <AnimatePresence>
           {error && (
             <motion.div 
-              className="w-full p-4 mt-6 text-red-600 bg-red-50 rounded-lg text-center"
+              className="w-full p-6 mt-6 text-red-600 bg-red-50 rounded-lg text-center flex flex-col items-center"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              {error}
+              <p className="mb-4">{error}</p>
+              {error.includes('No pets found') && (
+                <Button
+                  onClick={() => window.open('https://www.google.com/search?q=Animal+Shelters+Near+Me', '_blank')}
+                  variant="secondary"
+                  size="lg"
+                  className="mt-2"
+                >
+                  Find Animal Shelters Around Me
+                </Button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -271,7 +281,15 @@ export default function ResultsClient({ initialZipCode }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <p className="text-lg text-gray-600">No pets found. Try adjusting your search.</p>
+            <p className="text-lg text-gray-600 mb-4">No pets found. Try adjusting your search.</p>
+            <Button
+              onClick={() => window.open('https://www.google.com/search?q=Animal+Shelters+Near+Me', '_blank')}
+              variant="secondary"
+              size="lg"
+              className="mt-2"
+            >
+              Find Animal Shelters Around Me
+            </Button>
           </motion.div>
         )}
       </div>

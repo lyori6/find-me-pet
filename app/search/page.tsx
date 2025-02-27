@@ -6,11 +6,13 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { saveZipCode, validateZipCode } from '@/app/utils/storage'
 import LoadingSpinner from '@/app/components/LoadingSpinner'
+import NonUSLocationDialog from '@/app/components/NonUSLocationDialog'
 
 export default function SearchPage() {
   const [zipCode, setZipCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
+  const [showNonUSDialog, setShowNonUSDialog] = useState(false)
   const router = useRouter()
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -34,9 +36,23 @@ export default function SearchPage() {
         throw new Error('Geolocation is not supported by your browser')
       }
 
-      // Get current position
+      // Get current position with timeout
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject)
+        const locationTimeout = setTimeout(() => {
+          setLocationLoading(false)
+          reject(new Error('Location detection timed out. Please try again or enter your zip code manually'))
+        }, 5000) // 5 second timeout
+        
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            clearTimeout(locationTimeout)
+            resolve(position)
+          },
+          (error) => {
+            clearTimeout(locationTimeout)
+            reject(error)
+          }
+        )
       })
 
       const { latitude, longitude } = position.coords
@@ -51,6 +67,16 @@ export default function SearchPage() {
       }
       
       const data = await response.json()
+      
+      // Check if location is in the US
+      const country = data.address.country_code
+      if (country !== 'us') {
+        // Show non-US location dialog
+        setError('Unfortunately, we only operate in the United States.')
+        handleNonUSLocationDialog()
+        return
+      }
+      
       const detectedZipCode = data.address.postcode
       
       if (detectedZipCode && validateZipCode(detectedZipCode)) {
@@ -64,6 +90,16 @@ export default function SearchPage() {
     } finally {
       setLocationLoading(false)
     }
+  }
+  
+  // Function to handle non-US location dialog
+  const handleNonUSLocationDialog = () => {
+    setShowNonUSDialog(true)
+  }
+  
+  const handleFindShelters = () => {
+    window.open('https://www.google.com/search?q=Animal+Shelters+Near+Me', '_blank')
+    setShowNonUSDialog(false)
   }
   
   return (
@@ -148,6 +184,13 @@ export default function SearchPage() {
           </form>
         </motion.div>
       </div>
+      
+      {/* Non-US Location Dialog */}
+      <NonUSLocationDialog 
+        isOpen={showNonUSDialog} 
+        onClose={() => setShowNonUSDialog(false)}
+        onFindShelters={handleFindShelters}
+      />
     </div>
   )
 } 
