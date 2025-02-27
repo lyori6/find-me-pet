@@ -1,143 +1,70 @@
 # Google Tag Manager Implementation
 
+This document explains how Google Tag Manager (GTM) is implemented in the FindMePet application.
+
 ## Overview
-Google Tag Manager (GTM) has been implemented in the FindMePet application to enable tracking and analytics across the site. GTM allows for easy management of various tracking tags without requiring code changes for each new tag or tracking requirement.
+
+Google Tag Manager is implemented using Next.js App Router architecture with the following components:
+
+1. `GoogleTagManager.tsx` - Main client component that initializes GTM and tracks page views
+2. `GTMNoScript.tsx` - Client component that handles the noscript iframe (for users with JavaScript disabled)
+
+These components are integrated into the application's root layout to ensure GTM is loaded on every page.
+
+## Container ID
+
+The application uses the GTM container ID: `GTM-K9XW5SRP`
 
 ## Implementation Details
 
-The GTM container ID `GTM-K9XW5SRP` has been integrated into the application using a dedicated client-side component that properly handles Next.js App Router requirements.
+### Data Layer Initialization
 
-### Location of Implementation
-- The GTM implementation is in a dedicated component at `/app/components/GoogleTagManager.js`
-- The component is imported and used in the root layout file at `/app/layout.tsx`
-- The implementation follows Next.js App Router best practices to avoid hydration errors
+The data layer is initialized in two places to ensure proper loading:
 
-### Code Implementation
+1. A beforeInteractive script that creates the dataLayer array
+2. In the useEffect hook of the GoogleTagManager component
 
-1. **GoogleTagManager Component**
-   ```jsx
-   // app/components/GoogleTagManager.js
-   'use client';
-   
-   import Script from 'next/script';
-   import { useEffect } from 'react';
-   
-   export default function GoogleTagManager() {
-     // Handle page view tracking on client side
-     useEffect(() => {
-       if (typeof window !== 'undefined') {
-         window.dataLayer = window.dataLayer || [];
-         window.dataLayer.push({
-           'event': 'page_view',
-           'page_path': window.location.pathname,
-           'page_title': document.title
-         });
-       }
-     }, []);
-   
-     return (
-       <>
-         {/* Google Tag Manager - Script */}
-         <Script
-           id="gtm-script"
-           strategy="afterInteractive"
-           dangerouslySetInnerHTML={{
-             __html: `
-               (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-               new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-               j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-               'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-               })(window,document,'script','dataLayer','GTM-K9XW5SRP');
-             `,
-           }}
-         />
-         
-         {/* Initialize dataLayer */}
-         <Script
-           id="gtm-datalayer-init"
-           strategy="beforeInteractive"
-           dangerouslySetInnerHTML={{
-             __html: `
-               window.dataLayer = window.dataLayer || [];
-             `,
-           }}
-         />
-       </>
-     );
-   }
-   
-   export function GoogleTagManagerNoScript() {
-     return (
-       <noscript>
-         <iframe 
-           src="https://www.googletagmanager.com/ns.html?id=GTM-K9XW5SRP"
-           height="0" 
-           width="0" 
-           style={{ display: 'none', visibility: 'hidden' }}
-         />
-       </noscript>
-     );
-   }
-   ```
+### Page View Tracking
 
-2. **Usage in Root Layout**
-   ```tsx
-   // app/layout.tsx
-   import GoogleTagManager, { GoogleTagManagerNoScript } from './components/GoogleTagManager';
-   
-   export default function RootLayout({
-     children,
-   }: {
-     children: React.ReactNode
-   }) {
-     return (
-       <html lang="en" className={sfPro.variable}>
-         <head />
-         <body className="font-sans">
-           <GoogleTagManager />
-           <GoogleTagManagerNoScript />
-           <Providers>
-             {/* Rest of the layout */}
-           </Providers>
-         </body>
-       </html>
-     );
-   }
-   ```
+Page views are automatically tracked when the URL path or search parameters change using Next.js navigation hooks:
 
-## Usage
+- `usePathname()` - Tracks changes to the URL path
+- `useSearchParams()` - Tracks changes to URL query parameters
 
-### DataLayer
-The implementation includes a `dataLayer` object that can be used to push events and data to GTM. To push events to the dataLayer, you can use the following pattern:
+### Hydration Error Prevention
+
+To prevent hydration errors (server/client rendering mismatches), the GTMNoScript component only renders on the client side using React's useEffect and useState hooks.
+
+## Testing GTM Implementation
+
+To verify the GTM implementation is working correctly:
+
+1. Open the website in an incognito/private browser window
+2. Open browser developer tools (F12 or right-click > Inspect)
+3. Go to the Network tab and filter for "gtm.js"
+4. You should see the GTM script loading successfully
+5. Use the GTM Preview mode by going to https://tagmanager.google.com/ and entering your container ID
+
+## Custom Event Tracking
+
+You can track custom events by pushing to the dataLayer as follows:
 
 ```javascript
-window.dataLayer = window.dataLayer || [];
 window.dataLayer.push({
-  'event': 'eventName',
-  'eventProperty1': 'value1',
-  'eventProperty2': 'value2'
+  event: 'custom_event_name',
+  eventCategory: 'category',
+  eventAction: 'action',
+  eventLabel: 'label',
+  // Additional parameters as needed
 });
 ```
- 
-### Common Events to Track
-Consider tracking the following events:
 
-1. **Page Views**: Automatically tracked by the GoogleTagManager component
-2. **User Interactions**: 
-   - Form submissions (questionnaire completion)
-   - Pet card clicks
-   - Filter selections
-   - Navigation actions
-3. **Conversion Events**:
-   - Reaching the results page
-   - Clicking on external adoption links
+## Troubleshooting
 
-## Testing
-To verify that GTM is working correctly:
+If GTM is not loading correctly:
 
-1. Install the [Google Tag Assistant](https://chrome.google.com/webstore/detail/tag-assistant-by-google/kejbdjndbnbjgmefkgdddjlbokphdefk) Chrome extension
-2. Visit the site and check that GTM is detected
-3. Use the GTM preview mode to test tag firing
-
-## Maintenance
-Any future changes to tracking requirements should be managed through the GTM interface rather than changing the code implementation.
+1. Ensure there are no browser extensions blocking tracking scripts
+2. Check that the GTM container ID is correct
+3. Verify the script is not being blocked by Content Security Policy (CSP)
+4. Check for any JavaScript errors in the console
+5. Ensure the GoogleTagManager component is included in the layout file

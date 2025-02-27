@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import PetImagePlaceholder from './PetImagePlaceholder';
 import { decodeHtmlEntities } from '../utils/textUtils';
-import { trackPetCardClick } from '../utils/analytics';
 
 export default function PetCard({ pet, isTopMatch }) {
   // Handle missing data gracefully
@@ -34,15 +33,6 @@ export default function PetCard({ pet, isTopMatch }) {
   } else {
     decodedDescription = 'No description available';
   }
-
-  // Handle pet card click for analytics tracking
-  const handlePetCardClick = () => {
-    trackPetCardClick(
-      pet.id,
-      name,
-      pet?.type || 'Unknown'
-    );
-  };
 
   return (
     <motion.div 
@@ -83,11 +73,7 @@ export default function PetCard({ pet, isTopMatch }) {
         </>
       )}
       
-      <Link 
-        href={`/pet/${pet.id}`} 
-        className={`flex flex-col h-full relative ${isTopMatch ? 'z-10' : ''}`}
-        onClick={handlePetCardClick}
-      >
+      <Link href={`/pet/${pet.id}`} className={`flex flex-col h-full relative ${isTopMatch ? 'z-10' : ''}`}>
         <div className="relative bg-muted aspect-[4/3] overflow-hidden">
           {/* Display only photo, video handling removed */}
           {primaryPhoto ? (

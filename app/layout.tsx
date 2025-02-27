@@ -3,7 +3,8 @@ import "@/styles/globals.css"
 import localFont from "next/font/local"
 import Link from "next/link"
 import { Providers } from './providers';
-import GoogleTagManager, { GoogleTagManagerNoScript } from './components/GoogleTagManager';
+import GoogleTagManager from "@/components/GoogleTagManager";
+import GTMNoScript from "@/components/GTMNoScript";
 
 const sfPro = localFont({
   src: [
@@ -38,10 +39,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={sfPro.variable}>
-      <head />
       <body className="font-sans">
-        <GoogleTagManager />
-        <GoogleTagManagerNoScript />
+        <GTMNoScript />
         <Providers>
           <header className="bg-background shadow-sm">
             <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -60,6 +59,7 @@ export default function RootLayout({
           </header>
           <main className="container mx-auto px-4 py-8">{children}</main>
         </Providers>
+        <GoogleTagManager />
       </body>
     </html>
   )
