@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { saveZipCode, validateZipCode } from '@/app/utils/storage'
+import { cn } from "@/lib/utils"
 import QuestionnaireSteps from '@/app/components/QuestionnaireSteps'
 
 export default function QuestionnairePage() {
@@ -97,7 +98,13 @@ export default function QuestionnairePage() {
             <Button
               onClick={handleSubmit}
               disabled={!validateZipCode(formData.zipCode)}
-              className="px-8 ml-auto"
+              variant="none"
+              className={cn(
+                "px-8 ml-auto transition-all duration-200",
+                validateZipCode(formData.zipCode)
+                  ? "bg-gradient-to-r from-primary to-secondary text-white shadow-lg hover:shadow-xl hover:opacity-90"
+                  : "bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed text-white/70"
+              )}
             >
               Find Pets
             </Button>

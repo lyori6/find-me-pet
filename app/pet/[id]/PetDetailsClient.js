@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { Button } from '@/components/ui/button';
-import { decode } from 'html-entities';
+import { decodeHtmlEntities } from '@/app/utils/textUtils';
 import { petsCache } from '@/app/utils/cache';
 import SimpleGallery from '@/app/components/SimpleGallery';
 import { 
@@ -170,7 +170,7 @@ export default function PetDetailsClient({ petId }) {
   const videos = pet?.videos || [];
   const hasPhotos = photos.length > 0;
   const hasVideos = videos.length > 0;
-  const description = pet?.description ? decode(pet.description) : 'No description available';
+  const description = pet?.description ? decodeHtmlEntities(pet.description) : 'No description available';
   const attributes = pet?.attributes || {};
   const environment = pet?.environment || {};
   const tags = pet?.tags || [];
@@ -211,7 +211,7 @@ export default function PetDetailsClient({ petId }) {
           ref={descriptionRef}
           className={`text-gray-600 mt-2 overflow-hidden ${!showFullDescription ? 'max-h-[200px]' : ''}`}
           dangerouslySetInnerHTML={{ 
-            __html: decode(pet.description || '')
+            __html: decodeHtmlEntities(pet.description || '')
           }}
         />
         

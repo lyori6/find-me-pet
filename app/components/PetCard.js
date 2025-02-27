@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import PetImagePlaceholder from './PetImagePlaceholder';
+import { decodeHtmlEntities } from '../utils/textUtils';
+import { trackPetCardClick } from '../utils/analytics';
 
 export default function PetCard({ pet, isTopMatch }) {
   // Handle missing data gracefully
@@ -16,9 +18,31 @@ export default function PetCard({ pet, isTopMatch }) {
   const age = pet?.age || 'Unknown age';
   const gender = pet?.gender || 'Unknown gender';
   const distance = pet?.distance ? `${Math.round(pet.distance)} miles away` : 'Distance unknown';
-  const description = pet?.description ? 
-    (pet.description.length > 100 ? `${pet.description.substring(0, 100)}...` : pet.description) : 
-    'No description available';
+  
+  // Ensure description is decoded
+  let decodedDescription = '';
+  if (pet?.description) {
+    // First decode HTML entities (handles both single and double-encoded entities)
+    decodedDescription = decodeHtmlEntities(pet.description);
+    // Then truncate if needed
+    if (decodedDescription.length > 100) {
+      decodedDescription = `${decodedDescription.substring(0, 100)}...`;
+    }
+    // Log for debugging
+    console.log('Original:', pet.description);
+    console.log('Decoded:', decodedDescription);
+  } else {
+    decodedDescription = 'No description available';
+  }
+
+  // Handle pet card click for analytics tracking
+  const handlePetCardClick = () => {
+    trackPetCardClick(
+      pet.id,
+      name,
+      pet?.type || 'Unknown'
+    );
+  };
 
   return (
     <motion.div 
@@ -59,7 +83,11 @@ export default function PetCard({ pet, isTopMatch }) {
         </>
       )}
       
-      <Link href={`/pet/${pet.id}`} className={`flex flex-col h-full relative ${isTopMatch ? 'z-10' : ''}`}>
+      <Link 
+        href={`/pet/${pet.id}`} 
+        className={`flex flex-col h-full relative ${isTopMatch ? 'z-10' : ''}`}
+        onClick={handlePetCardClick}
+      >
         <div className="relative bg-muted aspect-[4/3] overflow-hidden">
           {/* Display only photo, video handling removed */}
           {primaryPhoto ? (
@@ -92,7 +120,7 @@ export default function PetCard({ pet, isTopMatch }) {
               </span>
             </div>
             
-            <p className="text-sm text-muted-foreground line-clamp-2 mt-3">{description}</p>
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-3">{decodedDescription}</p>
             
             <p className="text-sm text-muted-foreground flex items-center mt-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
