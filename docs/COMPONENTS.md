@@ -67,7 +67,7 @@ interface PetCardProps {
 
 **File**: `/app/components/SimpleGallery.js`
 
-**Purpose**: Provides a lightweight, responsive gallery component for displaying pet images with intuitive navigation and lightbox functionality.
+**Purpose**: Provides a lightweight, responsive gallery component for displaying pet images with intuitive navigation.
 
 **Props**:
 ```typescript
@@ -80,17 +80,15 @@ interface SimpleGalleryProps {
   }[];
   petName?: string;
   className?: string;
-  onImageClick?: (index: number) => void;
 }
 ```
 
 **Key Features**:
-- Fixed aspect ratio design (4:3) that works reliably across all devices
+- Responsive design that adapts to mobile and desktop
+- Square aspect ratio on mobile, 4:3 on desktop
 - Touch swipe navigation for mobile users
-- Large, accessible navigation buttons
-- Image counter in bottom-right corner
-- Responsive design with proper image loading
-- Lightbox mode for enlarged viewing
+- Large, accessible navigation buttons with semi-transparent background
+- Image counter in bottom-right corner (only shown if multiple images)
 - Optimized image loading with Next.js Image
 
 **Usage Example**:
@@ -100,27 +98,6 @@ interface SimpleGalleryProps {
   photos={pet.photos} 
   petName={pet.name}
   className="shadow-lg"
-/>
-
-// With lightbox functionality
-const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-const [activeIndex, setActiveIndex] = useState(0);
-
-<SimpleGallery 
-  photos={pet.photos} 
-  petName={pet.name}
-  onImageClick={(index) => {
-    setActiveIndex(index);
-    setIsLightboxOpen(true);
-  }}
-/>
-
-<SimpleLightbox
-  isOpen={isLightboxOpen}
-  onClose={() => setIsLightboxOpen(false)}
-  photos={pet.photos}
-  petName={pet.name}
-  startIndex={activeIndex}
 />
 ```
 
