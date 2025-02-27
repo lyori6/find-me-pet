@@ -118,7 +118,7 @@ window.dataLayer.push({
   'eventProperty2': 'value2'
 });
 ```
-
+ 
 ### Common Events to Track
 Consider tracking the following events:
 
