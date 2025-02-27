@@ -241,20 +241,44 @@ Gentleness: 90%
       const nameIndex = recommendationText.toLowerCase().indexOf(petName.toLowerCase());
       if (nameIndex !== -1) {
         const afterName = recommendationText.substring(nameIndex + petName.length);
-        // Find the first occurrence of a percentage pattern
-        const percentIndex = afterName.search(/\d+\s*%/);
-        if (percentIndex !== -1) {
-          matchReason = afterName.substring(0, percentIndex).trim();
-          // Clean up the match reason
-          matchReason = matchReason.replace(/^\W+|\W+$/g, ''); // Remove leading/trailing non-word chars
-        } else {
-          // If no percentage found, try to use everything up to newlines
-          const newlineIndex = afterName.indexOf('\n\n');
-          if (newlineIndex !== -1) {
-            matchReason = afterName.substring(0, newlineIndex).trim();
-          } else {
-            matchReason = afterName.trim();
+        
+        // Look for patterns that typically indicate the start of stats section
+        const statsSectionIndicators = [
+          /\n\s*[A-Za-z\s]+:\s*\d+\s*%/, // Line break followed by "Something: XX%"
+          /\.\s*[A-Za-z\s]+:\s*\d+\s*%/, // Period followed by "Something: XX%"
+          /\n\n/                         // Double line break
+        ];
+        
+        let cutoffIndex = afterName.length;
+        
+        // Find the earliest indicator of stats section
+        for (const pattern of statsSectionIndicators) {
+          const match = afterName.match(pattern);
+          if (match && match.index < cutoffIndex) {
+            // For newline or period patterns, cut at the match start
+            // For other patterns that include the stat name, cut precisely before the stat starts
+            if (pattern.toString().includes('\\n\\n')) {
+              cutoffIndex = match.index;
+            } else {
+              cutoffIndex = match.index;
+              // If we matched a pattern with a period, include the period in the reason text
+              if (pattern.toString().includes('\\.')) {
+                cutoffIndex += 1; // Include the period
+              }
+            }
           }
+        }
+        
+        // Extract the text up to our determined cutoff point
+        matchReason = afterName.substring(0, cutoffIndex).trim();
+        
+        // Clean up the match reason
+        matchReason = matchReason.replace(/^\W+|\W+$/g, ''); // Remove leading/trailing non-word chars
+        
+        // Final check - if the matchReason contains a percentage pattern, truncate it there
+        const percentCheck = matchReason.search(/\d+\s*%/);
+        if (percentCheck !== -1) {
+          matchReason = matchReason.substring(0, percentCheck).trim();
         }
       }
     }

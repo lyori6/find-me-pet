@@ -21,6 +21,7 @@ interface MatchStat {
 }
 
 interface Recommendation {
+  petId?: string
   petName: string
   matchReason: string
   stats: MatchStat[]
@@ -30,6 +31,7 @@ interface AiRecommendationProps {
   selectedTypes: string[]
   zipCode: string
   filteredAnimals: any[]
+  onRecommendationLoaded?: (recommendation: Recommendation | null) => void
   onRetry?: () => void
 }
 
@@ -61,6 +63,7 @@ export default function AiRecommendation({
   selectedTypes, 
   zipCode, 
   filteredAnimals,
+  onRecommendationLoaded,
   onRetry 
 }: AiRecommendationProps) {
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null)
@@ -139,6 +142,12 @@ export default function AiRecommendation({
     }
   }, [zipCode, filteredAnimals]);
 
+  useEffect(() => {
+    if (recommendation && onRecommendationLoaded) {
+      onRecommendationLoaded(recommendation);
+    }
+  }, [recommendation, onRecommendationLoaded]);
+
   const fetchRecommendation = async (userPetTypes = null) => {
     // Make sure we have valid animals to generate recommendations from
     if (!filteredAnimals || filteredAnimals.length === 0) {
@@ -204,6 +213,19 @@ export default function AiRecommendation({
         console.error("Missing pet name in recommendation:", recommendation);
         throw new Error("The AI recommendation is missing a pet name");
       }
+      
+      // If the recommendation doesn't already include a petId, try to find it
+      if (!recommendation.petId && recommendation.petName) {
+        // Try to find the matching pet by name
+        const matchedPet = filteredAnimals.find(animal => 
+          animal.name.toLowerCase() === recommendation.petName.toLowerCase()
+        );
+        
+        if (matchedPet) {
+          recommendation.petId = matchedPet.id;
+          console.log("Found pet ID for recommended pet:", recommendation.petId);
+        }
+      }
 
       console.log("Recommendation data:", recommendation);
 
@@ -241,16 +263,16 @@ export default function AiRecommendation({
       return (
         <div 
           key={index} 
-          className="text-center bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm relative"
+          className="text-center bg-white/50 backdrop-blur-sm rounded-lg p-3 shadow-sm relative"
           onClick={() => {
             // In the future, this could open a modal with the description
             // For now, we're just removing the description text
           }}
         >
-          <Badge variant="secondary" className="mb-2 text-lg px-4 py-1">
+          <Badge variant="secondary" className="mb-2 text-sm px-3 py-0.5">
             {stat.value}%
           </Badge>
-          <p className="text-sm text-muted-foreground">{stat.label}</p>
+          <p className="text-xs text-muted-foreground">{stat.label}</p>
         </div>
       );
     }
@@ -260,8 +282,8 @@ export default function AiRecommendation({
       <TooltipProvider key={index}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="text-center bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm cursor-help">
-              <Badge variant="secondary" className="mb-2 text-lg px-4 py-1">
+            <div className="text-center bg-white/50 backdrop-blur-sm rounded-lg p-3 shadow-sm cursor-help">
+              <Badge variant="secondary" className="mb-2 px-3 py-0.5 text-base">
                 {stat.value}%
               </Badge>
               <p className="text-sm text-muted-foreground">{stat.label}</p>
@@ -277,11 +299,11 @@ export default function AiRecommendation({
 
   return (
     <Card className="overflow-hidden">
-      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-6">
+      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <h2 className="text-2xl font-bold">AI Pet Match</h2>
+            <h2 className="text-xl sm:text-2xl font-bold">AI Pet Match</h2>
           </div>
           {/* Refresh button removed as requested */}
         </div>
@@ -299,10 +321,10 @@ export default function AiRecommendation({
                 <Skeleton className="h-5 w-40" />
               </div>
               <Skeleton className="h-16 w-full" />
-              <div className="grid grid-cols-3 gap-4">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3">
+                <Skeleton className="h-16 sm:h-20 w-full" />
+                <Skeleton className="h-16 sm:h-20 w-full" />
+                <Skeleton className="h-16 sm:h-20 w-full" />
               </div>
             </motion.div>
           )}
@@ -330,12 +352,12 @@ export default function AiRecommendation({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <p className="text-muted-foreground text-lg mb-6">
+              <p className="text-muted-foreground text-base sm:text-lg mb-5">
                 Based on your preferences, we think <span className="font-semibold text-primary">{recommendation.petName}</span>{" "}
                 could be a great match! {recommendation.matchReason}
               </p>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3">
                 {recommendation.stats.map((stat, index) => renderStat(stat, index))}
               </div>
             </motion.div>

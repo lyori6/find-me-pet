@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getZipCode } from '../utils/storage';
@@ -15,6 +15,7 @@ export default function ResultsClient({ initialZipCode }) {
   const [error, setError] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPetTypes, setSelectedPetTypes] = useState([]);
+  const [recommendedPetId, setRecommendedPetId] = useState(null);
   // Filters are intentionally locked (disabled) due to ongoing issues with the filter implementation
   // TODO: Keep filters locked until the following issues are resolved:
   // 1. Proper handling of multiple pet type selections
@@ -137,6 +138,25 @@ export default function ResultsClient({ initialZipCode }) {
     return selectedPetTypes.includes(pet.type);
   });
 
+  const orderedPets = useMemo(() => {
+    if (!recommendedPetId || filteredPets.length === 0) {
+      return filteredPets;
+    }
+    
+    // Find the recommended pet
+    const recommendedPet = filteredPets.find(pet => pet.id === recommendedPetId);
+    
+    if (!recommendedPet) {
+      return filteredPets;
+    }
+    
+    // Create a new array with the recommended pet first, followed by all other pets
+    return [
+      recommendedPet,
+      ...filteredPets.filter(pet => pet.id !== recommendedPetId)
+    ];
+  }, [filteredPets, recommendedPetId]);
+
   const availableTypes = [...new Set(pets.map(pet => pet.type))];
   const showAllTypes = selectedPetTypes.length === 0;
 
@@ -186,6 +206,12 @@ export default function ResultsClient({ initialZipCode }) {
               selectedTypes={selectedPetTypes}
               zipCode={zipCode}
               filteredAnimals={filteredPets}
+              onRecommendationLoaded={(recommendation) => {
+                // Extract the pet ID from the recommendation and set it in state
+                if (recommendation && recommendation.petId) {
+                  setRecommendedPetId(recommendation.petId);
+                }
+              }}
               onRetry={() => {
                 // Clear the localStorage cache
                 localStorage.removeItem("aiRecommendation");
@@ -196,8 +222,12 @@ export default function ResultsClient({ initialZipCode }) {
 
         {/* Pet grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredPets.slice(0, displayCount).map(pet => (
-            <PetCard key={pet.id} pet={pet} />
+          {orderedPets.slice(0, displayCount).map(pet => (
+            <PetCard 
+              key={pet.id} 
+              pet={pet} 
+              isTopMatch={pet.id === recommendedPetId}
+            />
           ))}
         </div>
 
