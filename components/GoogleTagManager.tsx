@@ -2,12 +2,13 @@
 
 import { usePathname, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
 // Your GTM ID
 const GTM_ID = 'GTM-K9XW5SRP';
 
-export default function GoogleTagManager() {
+// Component that uses search params, wrapped in Suspense
+function GTMPageViewTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -28,6 +29,10 @@ export default function GoogleTagManager() {
     }
   }, [pathname, searchParams]);
 
+  return null;
+}
+
+export default function GoogleTagManager() {
   return (
     <>
       {/* Initialize dataLayer array */}
@@ -55,6 +60,11 @@ export default function GoogleTagManager() {
           `,
         }}
       />
+      
+      {/* Wrap the component using useSearchParams in Suspense */}
+      <Suspense fallback={null}>
+        <GTMPageViewTracker />
+      </Suspense>
     </>
   );
 }

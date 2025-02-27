@@ -26,7 +26,7 @@ export default function QuickSearchButton() {
     <Button 
       size="lg" 
       variant="outline"
-      className="text-lg px-8 py-6 border-2 hover:bg-muted/50 transition-all"
+      className="text-lg px-8 py-6 border-2 hover:bg-muted/50 transition-all hover:scale-105 w-full sm:w-auto"
       onClick={handleQuickSearch}
       disabled={loading}
     >

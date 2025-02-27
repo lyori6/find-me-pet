@@ -42,10 +42,10 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="flex flex-col sm:flex-row gap-4 justify-center"
             >
-              <Link href="/questionnaire">
+              <Link href="/questionnaire" className="w-full sm:w-auto">
                 <Button 
                   size="lg" 
-                  className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-secondary text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                  className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-secondary text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 w-full"
                 >
                   Start Your Journey
                 </Button>

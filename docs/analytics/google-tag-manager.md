@@ -17,6 +17,16 @@ The application uses the GTM container ID: `GTM-K9XW5SRP`
 
 ## Implementation Details
 
+### Next.js App Router Compatibility
+
+When implementing GTM in Next.js App Router, there are several important considerations:
+
+1. **Suspense Boundaries**: Components using `useSearchParams()` or other navigation hooks must be wrapped in `<Suspense>` to avoid build errors. Our implementation separates the page tracking logic into a separate component that's properly wrapped.
+
+2. **Client Components**: All GTM-related components must use the `'use client'` directive since they interact with the browser's window object.
+
+3. **Hydration Issues**: The noscript iframe is rendered only on the client side to prevent hydration mismatches between server and client rendering.
+
 ### Data Layer Initialization
 
 The data layer is initialized in two places to ensure proper loading:
@@ -31,15 +41,19 @@ Page views are automatically tracked when the URL path or search parameters chan
 - `usePathname()` - Tracks changes to the URL path
 - `useSearchParams()` - Tracks changes to URL query parameters
 
-### Hydration Error Prevention
+### Build Errors Prevention
 
-To prevent hydration errors (server/client rendering mismatches), the GTMNoScript component only renders on the client side using React's useEffect and useState hooks.
+To prevent build errors with Next.js App Router static generation:
+
+1. All components using `useSearchParams()` are wrapped in `<Suspense>` boundaries
+2. Server-side rendering safe checks are implemented in utility functions
+3. The GTM components are placed in strategic locations in the component tree
 
 ## Testing GTM Implementation
 
 To verify the GTM implementation is working correctly:
 
-1. Open the website in an incognito/private browser window
+1. Visit the `/gtm-test` page in the application to check GTM status
 2. Open browser developer tools (F12 or right-click > Inspect)
 3. Go to the Network tab and filter for "gtm.js"
 4. You should see the GTM script loading successfully
@@ -47,16 +61,19 @@ To verify the GTM implementation is working correctly:
 
 ## Custom Event Tracking
 
-You can track custom events by pushing to the dataLayer as follows:
+You can track custom events by using the utility functions in `lib/analytics/gtm.ts`:
 
 ```javascript
-window.dataLayer.push({
-  event: 'custom_event_name',
-  eventCategory: 'category',
-  eventAction: 'action',
-  eventLabel: 'label',
-  // Additional parameters as needed
-});
+import { trackEvent, trackPetSearch, trackPetView } from "@/lib/analytics/gtm";
+
+// Track a custom event
+trackEvent('button_click', { buttonId: 'submit' });
+
+// Track a pet search
+trackPetSearch({ type: 'dog', breed: 'Labrador' });
+
+// Track a pet view
+trackPetView('pet123', { name: 'Max', type: 'dog' });
 ```
 
 ## Troubleshooting
@@ -67,4 +84,12 @@ If GTM is not loading correctly:
 2. Check that the GTM container ID is correct
 3. Verify the script is not being blocked by Content Security Policy (CSP)
 4. Check for any JavaScript errors in the console
-5. Ensure the GoogleTagManager component is included in the layout file
+5. Ensure the components are properly wrapped in Suspense boundaries
+
+### Common Build Errors
+
+If you encounter build errors like `useSearchParams() should be wrapped in a suspense boundary`, make sure:
+
+1. Any component using `useSearchParams()` is wrapped in a `<Suspense>` boundary
+2. The component is properly separated from the main GTM component
+3. All client-side only code is properly guarded with checks for window existence

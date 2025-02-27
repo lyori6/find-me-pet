@@ -2,6 +2,47 @@
 
 This document provides examples of how to use the GTM tracking utilities in your components.
 
+## Component Best Practices
+
+When using GTM tracking in your components, follow these best practices:
+
+```tsx
+'use client';
+
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { trackEvent } from "@/lib/analytics/gtm";
+
+// Separate component that uses search params
+function TrackingComponent() {
+  const searchParams = useSearchParams();
+  
+  // Use search params for tracking
+  // ...
+  
+  return null;
+}
+
+export default function MyComponent() {
+  // Safe to use without Suspense
+  const handleClick = () => {
+    trackEvent('event_name', { data: 'value' });
+  };
+  
+  return (
+    <div>
+      {/* Main component content */}
+      <button onClick={handleClick}>Click Me</button>
+      
+      {/* Wrap components using navigation hooks in Suspense */}
+      <Suspense fallback={null}>
+        <TrackingComponent />
+      </Suspense>
+    </div>
+  );
+}
+```
+
 ## Basic Event Tracking
 
 ```tsx
@@ -30,13 +71,38 @@ export default function SubmitButton() {
 }
 ```
 
-## Tracking Pet Search
+## Tracking Pet Search (with SearchParams)
 
 ```tsx
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { trackPetSearch } from "@/lib/analytics/gtm";
+
+// Component that uses searchParams
+function SearchParamsTracker() {
+  const searchParams = useSearchParams();
+  
+  // Use effect to track based on URL parameters
+  useEffect(() => {
+    if (searchParams) {
+      const type = searchParams.get('type');
+      const breed = searchParams.get('breed');
+      
+      if (type || breed) {
+        trackPetSearch({
+          type: type || '',
+          breed: breed || '',
+          fromUrl: true,
+        });
+      }
+    }
+  }, [searchParams]);
+  
+  return null;
+}
 
 export default function SearchForm() {
   const [filters, setFilters] = useState({
@@ -57,9 +123,16 @@ export default function SearchForm() {
   };
 
   return (
-    <form onSubmit={handleSearch}>
-      {/* Form fields */}
-    </form>
+    <>
+      <form onSubmit={handleSearch}>
+        {/* Form fields */}
+      </form>
+      
+      {/* Properly wrap the component using searchParams */}
+      <Suspense fallback={null}>
+        <SearchParamsTracker />
+      </Suspense>
+    </>
   );
 }
 ```

@@ -9,13 +9,25 @@ interface GTMEvent {
 }
 
 /**
+ * Type guard to ensure window is defined (for SSR compatibility)
+ */
+const isWindowDefined = (): boolean => {
+  return typeof window !== 'undefined';
+};
+
+/**
  * Push an event to the dataLayer
  * @param event The event object to push to the dataLayer
  */
 export function pushEvent(event: GTMEvent): void {
-  if (typeof window !== 'undefined') {
+  if (!isWindowDefined()) return;
+  
+  try {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(event);
+  } catch (error) {
+    // Silently fail to avoid breaking the app
+    console.warn('Error pushing event to dataLayer:', error);
   }
 }
 
@@ -41,7 +53,7 @@ export function trackEvent(
 export function trackPetSearch(searchFilters: Record<string, any>): void {
   trackEvent('pet_search_initiated', {
     searchFilters,
-    timestamp: new Date().toISOString(),
+    timestamp: isWindowDefined() ? new Date().toISOString() : '',
   });
 }
 

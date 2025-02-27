@@ -24,7 +24,7 @@ export default function GTMNoScript() {
         height="0"
         width="0"
         style={{ display: 'none', visibility: 'hidden' }}
-        title="gtm"
+        title="gtm-noscript"
       />
     </noscript>
   );

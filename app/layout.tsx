@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Providers } from './providers';
 import GoogleTagManager from "@/components/GoogleTagManager";
 import GTMNoScript from "@/components/GTMNoScript";
+import { Suspense } from "react";
 
 const sfPro = localFont({
   src: [
@@ -41,6 +42,10 @@ export default function RootLayout({
     <html lang="en" className={sfPro.variable}>
       <body className="font-sans">
         <GTMNoScript />
+        {/* Ensure GTM is loaded early but won't block other components */}
+        <Suspense fallback={null}>
+          <GoogleTagManager />
+        </Suspense>
         <Providers>
           <header className="bg-background shadow-sm">
             <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -59,7 +64,6 @@ export default function RootLayout({
           </header>
           <main className="container mx-auto px-4 py-8">{children}</main>
         </Providers>
-        <GoogleTagManager />
       </body>
     </html>
   )
