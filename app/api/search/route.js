@@ -14,7 +14,7 @@ export async function GET(request) {
     let token = await getAccessToken();
     
     // Build the API URL with filters
-    let apiUrl = `https://api.petfinder.com/v2/animals?location=${zipCode}&distance=25&sort=distance&status=adoptable`;
+    let apiUrl = `https://api.petfinder.com/v2/animals?location=${zipCode}&distance=25&sort=distance&status=adoptable&photos=true`;
     
     // Only add type filter if petTypes is not null, undefined, or 'any'
     if (petTypes && petTypes !== 'null' && petTypes !== 'any') {

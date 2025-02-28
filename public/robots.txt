@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Disallow crawling of dev subdomain
+User-agent: *
+Disallow: /
+Host: dev.findmepet.app
+
+# Sitemap location
+Sitemap: https://findmepet.app/sitemap.xml
