@@ -202,6 +202,52 @@ interface FilteredResultsClientProps {
 - Filter state updates trigger re-fetching of data
 - Uses the same PetCard component as the main results page
 
+### LoadingSpinner
+
+**File**: `/app/components/LoadingSpinner.js`
+
+**Purpose**: Provides a consistent, modern loading animation across the application.
+
+**Props**:
+```typescript
+interface LoadingSpinnerProps {
+  size?: 'small' | 'default' | 'large';
+  text?: string | null;
+  textPosition?: 'top' | 'bottom' | 'left' | 'right';
+}
+```
+
+**Key Features**:
+- Modern gradient animation using primary and secondary colors
+- Multiple size options for different contexts
+- Support for descriptive text with flexible positioning
+- Accessibility support with proper ARIA labels
+- Consistent styling across the application
+
+**Usage Example**:
+```jsx
+// Basic usage
+<LoadingSpinner />
+
+// With size and text
+<LoadingSpinner 
+  size="large" 
+  text="Loading pet details..." 
+/>
+
+// With text positioned to the right (useful for inline loading indicators)
+<LoadingSpinner 
+  size="small" 
+  text="Detecting location..." 
+  textPosition="right" 
+/>
+```
+
+**Implementation Details**:
+- Uses Framer Motion for smooth animations
+- Implements a dual-layer approach with static and animated elements
+- Detailed documentation available in [/docs/ui/LOADING-STATES.md](/docs/ui/LOADING-STATES.md)
+
 ## UI Components
 
 The app uses a collection of UI primitive components built with Radix UI. These components provide the foundation for building more complex components with consistent styling and behavior.

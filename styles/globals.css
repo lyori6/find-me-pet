@@ -27,6 +27,19 @@
   }
 }
 
+/**
+ * Note: We don't need to define the spin animation here anymore
+ * as it's now defined directly in the LoadingSpinner component
+ * using CSS-in-JSX.
+ * 
+ * However, we still need to keep a global spin animation for the
+ * loading-animation class used by other components.
+ */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -63,7 +76,12 @@
     @apply fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50;
   }
 
+  /* 
+   * Note: This class is kept for backward compatibility with other components
+   * that might be using it, but our main LoadingSpinner now uses inline styles.
+   */
   .loading-animation {
-    @apply w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin;
+    @apply w-16 h-16 border-4 border-primary border-t-transparent rounded-full;
+    animation: spin 1s linear infinite;
   }
 }

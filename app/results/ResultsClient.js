@@ -8,6 +8,7 @@ import { petsCache } from '../utils/cache';
 import PetCard from '../components/PetCard';
 import { Button } from '@/components/ui/button';
 import AiRecommendation from '@/components/ai-recommendation';
+import LoadingSpinner from '../components/LoadingSpinner'; // Correct import path
 
 export default function ResultsClient({ initialZipCode }) {
   const [pets, setPets] = useState([]);
@@ -99,18 +100,14 @@ export default function ResultsClient({ initialZipCode }) {
   }
 
   // Loading animation component
-  const LoadingSpinner = () => (
+  const LoadingSpinnerComponent = () => (
     <motion.div 
       className="flex flex-col items-center justify-center py-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <motion.div 
-        className="w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-      />
+      <LoadingSpinner size="large" text="Finding pets near you..." textPosition="bottom" />
     </motion.div>
   );
 
@@ -233,7 +230,7 @@ export default function ResultsClient({ initialZipCode }) {
 
         {/* Loading spinner shown at the bottom */}
         <AnimatePresence>
-          {loading && <LoadingSpinner />}
+          {loading && <LoadingSpinnerComponent />}
         </AnimatePresence>
 
         {/* Error message */}

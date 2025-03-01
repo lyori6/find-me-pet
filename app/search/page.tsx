@@ -153,10 +153,9 @@ export default function SearchPage() {
                 className="flex items-center justify-center gap-2 py-2 text-primary hover:text-primary/80"
               >
                 {locationLoading ? (
-                  <>
-                    <LoadingSpinner size="small" />
-                    <span>Detecting location...</span>
-                  </>
+                  <div className="flex items-center">
+                    <LoadingSpinner size="default" text="Detecting location..." textPosition="right" />
+                  </div>
                 ) : (
                   <>
                     <svg 

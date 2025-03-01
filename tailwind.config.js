@@ -66,13 +66,24 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
+        // Explicitly define spin animation to ensure it's not purged
+        spin: {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        // Explicitly define spin animation
+        "spin": "spin 1s linear infinite",
       },
     },
   },
+  // Ensure animations are not purged
+  safelist: [
+    'animate-spin',
+    'custom-spin'
+  ],
   plugins: [require("tailwindcss-animate")],
 }
-

@@ -49,6 +49,10 @@ export default function PetDetailsClient({ petId }) {
   const router = useRouter();
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  // Add a ref to track loading start time
+  const loadingStartTimeRef = useRef(null);
+  // Minimum time to show loading spinner (in ms)
+  const MIN_LOADING_TIME = 800;
 
   useEffect(() => {
     // Check if we're on mobile
@@ -85,18 +89,39 @@ export default function PetDetailsClient({ petId }) {
 
   useEffect(() => {
     async function fetchPetDetails() {
+      // Record the start time of loading
+      loadingStartTimeRef.current = Date.now();
+      console.log('Loading started at:', loadingStartTimeRef.current);
+      
       setLoading(true);
       setError(null);
+      
+      // Add a small delay to ensure the loading state is rendered
+      // This helps with the hydration timing issue
+      await new Promise(resolve => setTimeout(resolve, 50));
       
       try {
         // Check cache first using the new utility
         const cachedPet = petsCache.getPetDetails(petId);
         if (cachedPet) {
+          console.log('Pet found in cache:', petId);
           setPet(cachedPet);
+          
+          // Even with cached data, ensure loading spinner shows for minimum time
+          const elapsedTime = Date.now() - loadingStartTimeRef.current;
+          const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+          
+          console.log('Cache hit - Elapsed time:', elapsedTime, 'ms, Will show spinner for additional:', remainingTime, 'ms');
+          
+          if (remainingTime > 0) {
+            await new Promise(resolve => setTimeout(resolve, remainingTime));
+          }
+          
           setLoading(false);
           return;
         }
         
+        console.log('Pet not found in cache, fetching from API:', petId);
         // If not in cache, fetch from API
         const response = await fetch(`/api/pet/${petId}`);
         
@@ -104,6 +129,15 @@ export default function PetDetailsClient({ petId }) {
         if (response.status === 401) {
           console.error('Authorization error with pet service');
           setError('Authorization error with pet service. Please try refreshing the page.');
+          
+          // Ensure loading spinner shows for minimum time
+          const elapsedTime = Date.now() - loadingStartTimeRef.current;
+          const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+          
+          if (remainingTime > 0) {
+            await new Promise(resolve => setTimeout(resolve, remainingTime));
+          }
+          
           setLoading(false);
           
           // Wait a few seconds and try again automatically
@@ -142,6 +176,16 @@ export default function PetDetailsClient({ petId }) {
         console.error('Error fetching pet details:', err);
         setError(err.message || 'Failed to fetch pet details');
       } finally {
+        // Ensure loading spinner shows for minimum time
+        const elapsedTime = Date.now() - loadingStartTimeRef.current;
+        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+        
+        console.log('Fetch completed - Elapsed time:', elapsedTime, 'ms, Will show spinner for additional:', remainingTime, 'ms');
+        
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+        
         setLoading(false);
       }
     }
@@ -291,8 +335,14 @@ export default function PetDetailsClient({ petId }) {
         
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <LoadingSpinner size="large" />
-            <p className="mt-4 text-muted-foreground">Loading pet details...</p>
+            {/* Single spinner implementation */}
+            <div style={{ opacity: 1 }}>
+              <LoadingSpinner 
+                size="large" 
+                text={pet?.name ? `Getting information about ${pet.name}...` : "Loading pet details..."}
+                textPosition="bottom"
+              />
+            </div>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20">

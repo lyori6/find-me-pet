@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spinner Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f9fafb;
+    }
+    
+    .container {
+      text-align: center;
+    }
+    
+    h1 {
+      color: #374151;
+      margin-bottom: 2rem;
+    }
+    
+    .spinner {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 4px solid #e2e8f0;
+      border-top-color: #f47c7c;
+      border-right-color: #4ecdc4;
+      border-bottom-color: #4ecdc4;
+      border-left-color: #f47c7c;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    p {
+      color: #4b5563;
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Spinner Test</h1>
+    <div class="spinner"></div>
+    <p>If you can see a spinning circle above, the spinner animation is working correctly.</p>
+    <p>This is a standalone test that doesn't rely on React, Next.js, or Tailwind.</p>
+  </div>
+</body>
+</html>
