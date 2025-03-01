@@ -21,6 +21,20 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
+  Heart,
+  Film,
+  Info,
+  Users,
+  Smile,
+  FileText,
+  Ruler,
+  User,
+  Palette,
+  Home,
+  Scissors,
+  AlertTriangle,
+  Syringe,
+  Shield
 } from 'lucide-react';
 
 export default function PetDetailsClient({ petId }) {
@@ -202,29 +216,47 @@ export default function PetDetailsClient({ petId }) {
     }, 3000);
   };
 
+  // Format the description to show only 340 characters initially
+  const formatDescription = (text) => {
+    if (!text) return '';
+    
+    const decodedText = decodeHtmlEntities(text);
+    
+    if (decodedText.length <= 340 || showFullDescription) {
+      return decodedText;
+    }
+    
+    return decodedText.substring(0, 340) + '...';
+  };
+
   const renderDescription = () => {
     if (!pet?.description) return null;
     
+    const formattedDescription = formatDescription(pet.description);
+    const isLongDescription = pet.description.length > 340;
+    
     return (
       <>
-        <div 
-          ref={descriptionRef}
-          className={`text-gray-600 mt-2 overflow-hidden ${!showFullDescription ? 'max-h-[200px]' : ''}`}
-          dangerouslySetInnerHTML={{ 
-            __html: decodeHtmlEntities(pet.description || '')
-          }}
-        />
+        <div className="relative">
+          <div 
+            ref={descriptionRef}
+            className="text-gray-600 mt-2 leading-relaxed"
+            dangerouslySetInnerHTML={{ 
+              __html: formattedDescription
+            }}
+          />
+        </div>
         
-        {/* Only show Read More/Less button if the description is truncated */}
-        {isDescriptionTruncated && (
+        {/* Only show Read More button if the description is longer than 340 characters and not expanded */}
+        {isLongDescription && !showFullDescription && (
           <Button
             variant="ghost"
             size="sm"
             onClick={toggleDescription}
-            className="mt-2 text-primary flex items-center"
+            className="mt-2 flex items-center font-medium text-sky-600 hover:text-sky-700 transition-colors"
           >
-            {showFullDescription ? 'Read Less' : 'Read More'}
-            {showFullDescription ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}
+            Read More
+            <ChevronDown className="ml-1 h-4 w-4" />
           </Button>
         )}
       </>
@@ -233,16 +265,29 @@ export default function PetDetailsClient({ petId }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Back button at the top */}
-        <button
-          onClick={handleBack}
-          className="mb-6 bg-white shadow-md rounded-full p-3 hover:bg-gray-100 transition-colors flex items-center gap-2 w-fit"
-          aria-label="Go back"
-        >
-          <ArrowLeft size={20} />
-          <span className="mr-1 font-medium">Back</span>
-        </button>
+      <div className="container mx-auto px-4 py-4 max-w-6xl">
+        {/* Back button and pet name - Repositioned back button */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => router.back()}
+              className="bg-white shadow-md hover:shadow-lg transition-all rounded-lg px-4 py-2 flex items-center justify-center"
+            >
+              <ArrowLeft size={20} className="text-gray-700 mr-2" />
+              <span className="text-gray-700 font-medium">Back</span>
+            </button>
+          </div>
+          <div className="mb-2">
+            {loading ? (
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Loading...</h1>
+            ) : (
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{name}</h1>
+            )}
+            {breeds && breeds.primary && (
+              <p className="text-gray-600 mt-1">{breeds.primary}{breeds.secondary ? ` / ${breeds.secondary}` : ''}</p>
+            )}
+          </div>
+        </div>
         
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -274,12 +319,6 @@ export default function PetDetailsClient({ petId }) {
           </div>
         ) : (
           <div className="flex flex-col gap-8">
-            {/* Pet Name and Breed - Now at the top */}
-            <div className="w-full">
-              <h1 className="text-3xl md:text-4xl font-bold text-primary">{name}</h1>
-              <p className="text-lg text-muted-foreground mt-1">{breeds.primary}{breeds.secondary ? ` / ${breeds.secondary}` : ''}</p>
-            </div>
-            
             {/* Main content area */}
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Image section */}
@@ -320,31 +359,42 @@ export default function PetDetailsClient({ petId }) {
                 
                 {/* Location and Organization - Now below the image with more spacing */}
                 {fullAddress && (
-                  <div className="flex items-center text-muted-foreground mb-6">
-                    <div className="bg-primary/10 rounded-full p-2 mr-4 text-primary">
-                      <MapPin size={16} />
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-6 hover:shadow-lg transition-shadow duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                    <h2 className="text-xl font-bold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                      Location
+                    </h2>
+                    <div className="flex items-center text-gray-600">
+                      <span>{fullAddress}{organization ? ` • ${organization}` : ''}</span>
                     </div>
-                    <span className="ml-2">{fullAddress}{organization ? ` • ${organization}` : ''}</span>
                   </div>
                 )}
                 
                 {/* Description - Now below the image */}
                 {pet?.description && (
-                  <div className="bg-white rounded-3xl p-6 space-y-4 shadow-md border border-gray-100 mb-6">
-                    <h2 className="text-xl font-semibold">Meet {name}</h2>
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-6 hover:shadow-lg transition-shadow duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                    <h2 className="text-xl font-bold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                      <Heart size={20} className="mr-2 text-primary" />
+                      Meet {name}
+                    </h2>
                     {renderDescription()}
                   </div>
                 )}
                 
                 {/* Videos Section */}
                 {hasVideos && (
-                  <div className="w-full mt-4 mb-6 bg-white rounded-3xl p-4 shadow-md">
-                    <h3 className="text-lg font-semibold mb-3">Videos</h3>
+                  <div className="w-full mt-4 mb-6 bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                    <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                      <Film size={20} className="mr-2 text-primary" />
+                      Videos
+                    </h3>
                     <div className="space-y-4">
                       {videos.map((video, index) => (
                         <div 
                           key={`video-${index}`}
-                          className="relative rounded-xl overflow-hidden aspect-video bg-slate-100"
+                          className="relative rounded-xl overflow-hidden aspect-video bg-slate-100 shadow-sm"
                         >
                           <div 
                             dangerouslySetInnerHTML={{ __html: video.embed }}
@@ -359,181 +409,223 @@ export default function PetDetailsClient({ petId }) {
               
               {/* Details section */}
               <div className="w-full lg:w-1/2 space-y-6">
-                {/* Key Attributes */}
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <span className="px-4 py-2 bg-filter text-black rounded-full font-medium shadow-sm">
-                    {pet.age}
-                  </span>
-                  <span className="px-4 py-2 bg-filter text-black rounded-full font-medium shadow-sm">
-                    {pet.gender}
-                  </span>
-                  <span className="px-4 py-2 bg-filter text-black rounded-full font-medium shadow-sm">
-                    {pet.size}
-                  </span>
-                  {pet.colors && pet.colors.primary && (
-                    <span className="px-4 py-2 bg-filter text-black rounded-full font-medium shadow-sm">
-                      {pet.colors.primary}
-                    </span>
-                  )}
-                </div>
-
-                {/* Attributes Section */}
+                {/* Attributes Section - Simplified with universal cards */}
                 {Object.values(attributes).some(value => value) && (
-                  <div className="bg-white rounded-3xl p-6 space-y-4 shadow-md border border-gray-100">
-                    <h2 className="text-xl font-semibold">About {name}</h2>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {attributes.spayed_neutered && (
-                        <div className="flex items-center">
-                          <div className="bg-green-100 rounded-full p-1.5 mr-2 text-green-600">
-                            <Check size={14} />
-                          </div>
-                          <span>Spayed/Neutered</span>
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-5 hover:shadow-lg transition-shadow duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                    <div className="relative z-10">
+                      <h2 className="text-xl font-bold mb-5 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                        <Info size={20} className="mr-2 text-primary" />
+                        About {name}
+                      </h2>
+                      
+                      {/* Key Attributes - Grouped with dividers */}
+                      <div className="mb-6">
+                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Basic Information</h3>
+                        <div className="flex flex-wrap gap-3 mb-4 justify-start">
+                          {pet.age && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>Age: {pet.age}</span>
+                            </div>
+                          )}
+                          {pet.gender && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>Gender: {pet.gender}</span>
+                            </div>
+                          )}
+                          {pet.size && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>Size: {pet.size}</span>
+                            </div>
+                          )}
+                          {pet.colors && pet.colors.primary && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>Color: {pet.colors.primary}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {attributes.house_trained && (
-                        <div className="flex items-center">
-                          <div className="bg-green-100 rounded-full p-1.5 mr-2 text-green-600">
-                            <Check size={14} />
-                          </div>
-                          <span>House Trained</span>
+                      </div>
+                      
+                      {/* Medical Information with subtle divider */}
+                      <div className="pt-4 border-t border-gray-100">
+                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Medical Information</h3>
+                        <div className="flex flex-wrap gap-3 justify-start">
+                          {attributes.spayed_neutered && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>Spayed/Neutered</span>
+                            </div>
+                          )}
+                          {attributes.house_trained && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>House Trained</span>
+                            </div>
+                          )}
+                          {attributes.declawed && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>Declawed</span>
+                            </div>
+                          )}
+                          {attributes.special_needs && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>Special Needs</span>
+                            </div>
+                          )}
+                          {attributes.shots_current && (
+                            <div className="px-4 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary rounded-lg font-medium border border-primary/30 shadow-sm hover:shadow-md hover:from-primary/30 hover:to-secondary/30 transition-all duration-300 flex items-center">
+                              <span>Shots Current</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {attributes.declawed && (
-                        <div className="flex items-center">
-                          <div className="bg-green-100 rounded-full p-1.5 mr-2 text-green-600">
-                            <Check size={14} />
-                          </div>
-                          <span>Declawed</span>
-                        </div>
-                      )}
-                      {attributes.special_needs && (
-                        <div className="flex items-center">
-                          <div className="bg-amber-100 rounded-full p-1.5 mr-2 text-amber-600">
-                            <AlertCircle size={14} />
-                          </div>
-                          <span>Special Needs</span>
-                        </div>
-                      )}
-                      {attributes.shots_current && (
-                        <div className="flex items-center">
-                          <div className="bg-green-100 rounded-full p-1.5 mr-2 text-green-600">
-                            <Check size={14} />
-                          </div>
-                          <span>Shots Current</span>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Environment Section */}
+                {/* Environment Section - Improved to consistently show compatibility */}
                 {(environment.children !== null || environment.dogs !== null || environment.cats !== null) && (
-                  <div className="bg-white rounded-3xl p-6 space-y-4 shadow-md border border-gray-100">
-                    <h2 className="text-xl font-semibold">Good With</h2>
-                    
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="flex flex-col items-center">
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
-                          environment.children 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-rose-100 text-rose-700'
-                        } shadow-sm`}>
-                          <span className="text-2xl" role="img" aria-label={environment.children ? "Good with children" : "Not good with children"}>
-                            {environment.children ? '👶' : '🚫'}
-                          </span>
-                        </div>
-                        <span className="text-sm text-center font-medium">Children</span>
-                      </div>
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-5 hover:shadow-lg transition-shadow duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                    <div className="relative z-10">
+                      <h2 className="text-xl font-bold mb-5 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                        <Users size={20} className="mr-2 text-primary" />
+                        Good With
+                      </h2>
                       
-                      <div className="flex flex-col items-center">
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
-                          environment.dogs 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-rose-100 text-rose-700'
-                        } shadow-sm`}>
-                          <span className="text-2xl" role="img" aria-label={environment.dogs ? "Good with dogs" : "Not good with dogs"}>
-                            {environment.dogs ? '🐶' : '🚫'}
+                      {/* Grid layout for environment */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
+                            environment.children === true
+                              ? 'bg-green-100 text-green-600 border border-green-200' 
+                              : 'bg-red-100 text-red-600 border border-red-200'
+                          }`}>
+                            {environment.children === true ? <Check size={20} /> : <X size={20} />}
+                          </div>
+                          <span className="font-medium">Children</span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            {environment.children === true
+                              ? "Good with children" 
+                              : environment.children === false
+                                ? "Prefers homes without children"
+                                : "No information available"}
                           </span>
                         </div>
-                        <span className="text-sm text-center font-medium">Dogs</span>
-                      </div>
-                      
-                      <div className="flex flex-col items-center">
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
-                          environment.cats 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-rose-100 text-rose-700'
-                        } shadow-sm`}>
-                          <span className="text-2xl" role="img" aria-label={environment.cats ? "Good with cats" : "Not good with cats"}>
-                            {environment.cats ? '🐱' : '🚫'}
+                        
+                        <div className="bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
+                            environment.dogs === true
+                              ? 'bg-green-100 text-green-600 border border-green-200' 
+                              : 'bg-red-100 text-red-600 border border-red-200'
+                          }`}>
+                            {environment.dogs === true ? <Check size={20} /> : <X size={20} />}
+                          </div>
+                          <span className="font-medium">Dogs</span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            {environment.dogs === true
+                              ? "Good with dogs" 
+                              : environment.dogs === false
+                                ? "Prefers homes without dogs"
+                                : "No information available"}
                           </span>
                         </div>
-                        <span className="text-sm text-center font-medium">Cats</span>
+                        
+                        <div className="bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
+                            environment.cats === true
+                              ? 'bg-green-100 text-green-600 border border-green-200' 
+                              : 'bg-red-100 text-red-600 border border-red-200'
+                          }`}>
+                            {environment.cats === true ? <Check size={20} /> : <X size={20} />}
+                          </div>
+                          <span className="font-medium">Cats</span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            {environment.cats === true
+                              ? "Good with cats" 
+                              : environment.cats === false
+                                ? "Prefers homes without cats"
+                                : "No information available"}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Tags/Personality */}
+                {/* Tags/Personality - With consistent gray text */}
                 {tags.length > 0 && (
-                  <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
-                    <h2 className="text-xl font-semibold mb-4">Personality</h2>
-                    <div className="flex flex-wrap gap-3">
-                      {tags.map((tag, index) => (
-                        <span 
-                          key={index} 
-                          className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium shadow-sm"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-5 hover:shadow-lg transition-shadow duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                    <div className="relative z-10">
+                      <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                        <Smile size={20} className="mr-2 text-primary" />
+                        Personality
+                      </h2>
+                      
+                      {/* Flex layout for personality traits */}
+                      <div className="flex flex-wrap gap-3 mt-4">
+                        {tags.map((tag, index) => {
+                          return (
+                            <div 
+                              key={index}
+                              className="px-4 py-2 bg-gray-100 rounded-lg border shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+                            >
+                              <span className="font-medium text-gray-700">{tag}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
-
-                {/* Additional details section */}
-                <div className="bg-white rounded-3xl p-6 space-y-4 shadow-md border border-gray-100">
-                  <h2 className="text-xl font-semibold">Additional Details</h2>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {pet.breeds && pet.breeds.primary && (
-                      <div className="bg-slate-50 p-4 rounded-xl">
-                        <div className="text-sm text-slate-500 mb-1">Breed</div>
-                        <div className="font-medium">{pet.breeds.primary}</div>
-                        {pet.breeds && pet.breeds.secondary && (
-                          <div className="text-sm text-slate-600 mt-1">Mix: {pet.breeds.secondary}</div>
-                        )}
-                      </div>
-                    )}
+                
+                {/* Additional details section - Side by side cards */}
+                <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-5 hover:shadow-lg transition-shadow duration-300">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                  <div className="relative z-10">
+                    <h2 className="text-xl font-bold mb-5 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                      <FileText size={20} className="mr-2 text-primary" />
+                      Additional Details
+                    </h2>
                     
-                    {pet.coat && (
-                      <div className="bg-slate-50 p-4 rounded-xl">
-                        <div className="text-sm text-slate-500 mb-1">Coat</div>
-                        <div className="font-medium">{pet.coat}</div>
-                      </div>
-                    )}
-
-                    {pet.colors?.primary && (
-                      <div className="bg-slate-50 p-4 rounded-xl">
-                        <div className="text-sm text-slate-500 mb-1">Color</div>
-                        <div className="font-medium">
-                          {pet.colors.primary}
-                          {pet.colors && pet.colors.secondary && ` & ${pet.colors.secondary}`}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {pet.breeds && pet.breeds.primary && (
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary">
+                          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Breed</h3>
+                          <p className="font-medium text-gray-800">{breeds.primary}{breeds.secondary ? ` / ${breeds.secondary}` : ''}</p>
                         </div>
-                      </div>
-                    )}
+                      )}
+                      {pet.coat && (
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary">
+                          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Coat</h3>
+                          <p className="font-medium text-gray-800">{pet.coat}</p>
+                        </div>
+                      )}
+                      {pet.colors && pet.colors.primary && (
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary">
+                          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Color</h3>
+                          <p className="font-medium text-gray-800">
+                            {pet.colors.primary}
+                            {pet.colors.secondary ? `, ${pet.colors.secondary}` : ''}
+                            {pet.colors.tertiary ? `, ${pet.colors.tertiary}` : ''}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Adoption CTA */}
-                <div className="flex flex-wrap gap-4 pt-4 pb-8">
-                  <button
-                    onClick={handleAdopt}
-                    className="bg-primary hover:bg-primary-dark text-white text-lg px-8 py-4 rounded-2xl shadow-md w-full font-medium"
-                  >
-                    Adopt {name}
-                  </button>
+                <div className="pt-4 pb-8">
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                    <h2 className="text-xl font-bold mb-5 text-gray-800 text-center">Ready to Welcome {name} Home?</h2>
+                    <button
+                      onClick={handleAdopt}
+                      className="bg-gradient-to-r from-primary to-secondary text-white text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl mx-auto block w-3/4 font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Adopt {name}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
