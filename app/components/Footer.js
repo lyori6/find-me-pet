@@ -1,17 +1,21 @@
 import Link from 'next/link';
 import { Home, Heart, Search } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="bg-slate-50 border-t border-slate-200 pt-12">
+    <footer className="bg-slate-50 border-t border-slate-200 pt-12 bg-primary/40">
       <div className="container mx-auto px-6 pb-8">
         {/* Main footer content */}
         <div className="flex flex-col md:flex-row justify-between items-start mb-10">
           {/* Logo and tagline */}
-          <div className="mb-8 md:mb-0 max-w-xs">
-            <div className="text-primary font-bold text-2xl mb-3">PetMatch</div>
+          <div className="mb-8 md:mb-0 max-w-xs pt-4">
+            <div className="text-primary font-bold text-2xl mb-3 flex items-center">
+              <Image src="/logo.svg" alt="FindMe.pet Logo" width={24} height={24} className="mr-2" />
+              FindMe.pet
+            </div>
             <p className="text-sm text-slate-500">
               Connecting loving homes with pets in need.
             </p>
@@ -32,7 +36,7 @@ export default function Footer() {
                   Find a Pet
                 </Link>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center mb-8">
                 <Search className="w-4 h-4 text-primary mr-2" />
                 <Link href="/search" className="text-sm text-slate-600 hover:text-primary transition-colors">
                   Quick Search
@@ -43,10 +47,10 @@ export default function Footer() {
         </div>
         
         {/* Footer bottom / copyright */}
-        <div className="border-t border-slate-200">
+        <div className="border-t border-slate-200 pt-12 mb-6">
           <div className="flex justify-between items-center py-4">
             <p className="text-sm text-slate-500">
-              &copy; {currentYear} PetMatch. All rights reserved. Made with ❤️ by <a 
+              &copy; {currentYear} FindMe.pet. All rights reserved. Made with ❤️ by <a 
                 href="https://www.linkedin.com/in/lyor/" 
                 target="_blank" 
                 rel="noopener noreferrer"

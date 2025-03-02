@@ -13,6 +13,9 @@ export default function Home() {
     <main>
       {/* Rotating Hero Section - Full screen, outside container */}
       <RotatingHero />
+      
+      {/* Spacer div to push footer down */}
+      <div className="h-84 md:h-[28rem] lg:h-[35rem]"></div>
     </main>
   )
 }

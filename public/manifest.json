@@ -1,0 +1,16 @@
+{
+  "name": "FindMe.pet",
+  "short_name": "FindMe.pet",
+  "description": "Connect with adoptable pets in your area and find your perfect companion.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ef4444",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
