@@ -31,7 +31,6 @@ const glowStyles = `
 
   .rotating-pet-name {
     font-weight: 600;
-    font-size: 8em;
     background: linear-gradient(to right, #ff1a1a, #00ffee);
     -webkit-background-clip: text;
     background-clip: text;
@@ -39,6 +38,18 @@ const glowStyles = `
     letter-spacing: -0.5px;
     text-shadow: none;
     line-height: 0.9;
+  }
+
+  @media (max-width: 768px) {
+    .rotating-pet-name {
+      font-size: 6em;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .rotating-pet-name {
+      font-size: 8em;
+    }
   }
 `;
 
@@ -127,7 +138,7 @@ export default function RotatingHero() {
                   animate={{ opacity: isReady ? 1 : 0, y: isReady ? 0 : 10 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3, delay: 0 }} 
-                  className="text-9xl md:text-[12rem] lg:text-[16rem] font-semibold rotating-pet-name"
+                  className="font-semibold rotating-pet-name"
                 >
                   {displayName}
                 </motion.span>

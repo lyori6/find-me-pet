@@ -44,6 +44,8 @@ export default function PetDetailsClient({ petId }) {
   const [error, setError] = useState(null);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const descriptionRef = useRef(null);
   const [isDescriptionTruncated, setIsDescriptionTruncated] = useState(false);
@@ -57,14 +59,16 @@ export default function PetDetailsClient({ petId }) {
 
   useEffect(() => {
     // Check if we're on mobile
-    const checkMobile = () => {
+    const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1200);
+      setIsDesktop(window.innerWidth >= 1200);
     };
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
     
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
   useEffect(() => {
@@ -424,36 +428,59 @@ export default function PetDetailsClient({ petId }) {
                           opacity: 0.7
                         }}
                       ></div>
-                      <SimpleGallery 
-                        photos={photos} 
-                        petName={name}
-                        className="shadow-lg relative z-10"
-                        initialIndex={activePhotoIndex}
-                        onIndexChange={setActivePhotoIndex}
-                      />
-                      
-                      {/* Thumbnails for desktop */}
-                      {!isMobile && photos.length > 1 && (
-                        <div className="hidden lg:flex mt-4 gap-2 overflow-x-auto pb-2 max-w-full">
-                          {photos.map((photo, index) => (
-                            <button
-                              key={`photo-${index}`}
-                              onClick={() => setActivePhotoIndex(index)}
-                              className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-200 ${
-                                index === activePhotoIndex ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-100'
-                              }`}
-                            >
-                              <Image
-                                src={photo.medium || photo.small || photo.large || photo.full}
-                                alt={`Thumbnail ${index + 1}`}
-                                fill
-                                sizes="80px"
-                                className="object-cover"
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <div className="relative">
+                        {/* Image counter with inline styles for maximum visibility */}
+                        {photos.length > 1 && (
+                          <div 
+                            style={{ 
+                              position: 'absolute',
+                              bottom: '25px',
+                              right: isMobile ? '25px' : isTablet ? '65px' : '85px',
+                              backgroundColor: '#000000',
+                              color: '#ffffff',
+                              padding: '6px 10px',
+                              fontWeight: 'bold',
+                              fontSize: '14px',
+                              zIndex: 9999,
+                              borderRadius: '4px',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                            }}
+                          >
+                            {activePhotoIndex + 1} / {photos.length}
+                          </div>
+                        )}
+                        
+                        <SimpleGallery 
+                          photos={photos} 
+                          petName={name}
+                          className="shadow-lg relative z-10"
+                          initialIndex={activePhotoIndex}
+                          onIndexChange={setActivePhotoIndex}
+                        />
+                        
+                        {/* Thumbnails for desktop */}
+                        {!isMobile && photos.length > 1 && (
+                          <div className="hidden lg:flex mt-4 gap-2 overflow-x-auto pb-2 max-w-full">
+                            {photos.map((photo, index) => (
+                              <button
+                                key={`photo-${index}`}
+                                onClick={() => setActivePhotoIndex(index)}
+                                className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-200 ${
+                                  index === activePhotoIndex ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-100'
+                                }`}
+                              >
+                                <Image
+                                  src={photo.medium || photo.small || photo.large || photo.full}
+                                  alt={`Thumbnail ${index + 1}`}
+                                  fill
+                                  sizes="80px"
+                                  className="object-cover"
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

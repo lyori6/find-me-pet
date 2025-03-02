@@ -8,8 +8,10 @@ export default function SimpleGallery({
   photos = [], 
   petName = 'Pet',
   className = '',
+  initialIndex = 0,
+  onIndexChange = null,
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -26,17 +28,31 @@ export default function SimpleGallery({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Update currentIndex when initialIndex changes
+  useEffect(() => {
+    setCurrentIndex(initialIndex);
+  }, [initialIndex]);
+
   // If no photos, return nothing
   if (!photos || photos.length === 0) {
     return null;
   }
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % photos.length);
+    const newIndex = (currentIndex + 1) % photos.length;
+    setCurrentIndex(newIndex);
+    if (onIndexChange) onIndexChange(newIndex);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length);
+    const newIndex = (currentIndex - 1 + photos.length) % photos.length;
+    setCurrentIndex(newIndex);
+    if (onIndexChange) onIndexChange(newIndex);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+    if (onIndexChange) onIndexChange(index);
   };
 
   // Handle touch events for swipe
@@ -102,7 +118,7 @@ export default function SimpleGallery({
           {photos.map((_, index) => (
             <button
               key={`dot-${index}`}
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => goToSlide(index)}
               className={`w-3 h-3 rounded-full transition-all ${
                 index === currentIndex 
                   ? 'bg-primary border-2 border-white' 
