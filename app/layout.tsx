@@ -6,6 +6,7 @@ import { Providers } from './providers';
 import GoogleTagManager from "@/components/GoogleTagManager";
 import GTMNoScript from "@/components/GTMNoScript";
 import { Suspense } from "react";
+import Footer from "./components/Footer";
 
 const sfPro = localFont({
   src: [
@@ -40,7 +41,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={sfPro.variable}>
-      <body className="font-sans">
+      <body className="font-sans min-h-screen flex flex-col">
         <GTMNoScript />
         {/* Ensure GTM is loaded early but won't block other components */}
         <Suspense fallback={null}>
@@ -62,7 +63,8 @@ export default function RootLayout({
               </div>
             </nav>
           </header>
-          <main className="container mx-auto px-4 pb-8 pt-0">{children}</main>
+          <main className="container mx-auto px-4 flex-grow mb-20">{children}</main>
+          <Footer />
         </Providers>
       </body>
     </html>

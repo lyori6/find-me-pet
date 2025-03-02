@@ -10,7 +10,7 @@ import RotatingHero from '@/app/components/RotatingHero'
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
+    <main>
       {/* Rotating Hero Section - Full screen, outside container */}
       <RotatingHero />
     </main>

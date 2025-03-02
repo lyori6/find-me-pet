@@ -12,9 +12,9 @@ export default function AltResultsPage({ searchParams }) {
         {/* Spacer div to create visible space */}
         <div className="h-8 w-full bg-transparent"></div>
         <h1 className="text-3xl sm:text-4xl font-bold mb-6 text-gray-800">
-          Alternative Pet Results
+          Adoptable Pets Near You
         </h1>
-        <p className="text-base sm:text-xl text-gray-500 mb-10">Find and filter pets {zipCode ? `in the ${zipCode} area` : 'in your area'}</p>
+        <p className="text-base sm:text-xl text-gray-500 mb-10">Find your perfect companion in the {zipCode} area</p>
         <FilteredResultsClient initialZipCode={zipCode} />
       </div>
     </div>

@@ -82,13 +82,24 @@ export default function RotatingHero() {
   
   // Set up the interval for rotating pets
   useEffect(() => {
+    // First transition happens faster (1 second)
+    const firstTransitionTimer = setTimeout(() => {
+      setIsReady(false); // Reset ready state before changing index
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % pets.length);
+      setImagesLoaded(false); // Reset image loaded state for the new image
+    }, 1000);
+    
+    // Regular interval for subsequent transitions (4 seconds)
     const timer = setInterval(() => {
       setIsReady(false); // Reset ready state before changing index
       setCurrentIndex((prevIndex) => (prevIndex + 1) % pets.length);
       setImagesLoaded(false); // Reset image loaded state for the new image
     }, 4000);
     
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(firstTransitionTimer);
+      clearInterval(timer);
+    };
   }, [pets.length]);
   
   // Current image to show - use fallback if primary image fails
@@ -115,7 +126,7 @@ export default function RotatingHero() {
       {/* Inject the custom styles */}
       <style jsx>{glowStyles}</style>
       
-      <div className="w-full bg-slate-50 flex justify-center py-0 relative overflow-hidden">
+      <div className="w-full bg-background flex justify-center py-0 relative overflow-hidden">
         {/* Custom background glow effect */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-100 pointer-events-none">
           <div className="absolute -top-24 -left-24 w-[50rem] h-[50rem] rounded-full bg-primary/100 blur-[70px]"></div>
@@ -193,7 +204,7 @@ export default function RotatingHero() {
           </div>
           
           {/* CTA Buttons - Below the image with enhanced styling and spacing */}
-          <div className="w-full mt-2 md:mt-4">
+          <div className="w-full mt-2 md:mt-4 pb-4">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-xl mx-auto">
               <Link href="/questionnaire" className="w-full sm:w-auto">
                 <Button 
@@ -203,7 +214,7 @@ export default function RotatingHero() {
                 </Button>
               </Link>
               
-              <div className="w-full sm:w-auto mt-4 sm:mt-0">
+              <div className="w-full sm:w-auto mt-2 sm:mt-0">
                 <Button 
                   variant="outline"
                   className="w-full h-14 text-base md:text-lg font-medium px-8 border-2 border-slate-300 text-slate-700 rounded-full hover:bg-slate-100 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap"
