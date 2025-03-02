@@ -62,7 +62,7 @@ export default function RootLayout({
               </div>
             </nav>
           </header>
-          <main className="container mx-auto px-4 py-8">{children}</main>
+          <main className="container mx-auto px-4 pb-8 pt-0">{children}</main>
         </Providers>
       </body>
     </html>

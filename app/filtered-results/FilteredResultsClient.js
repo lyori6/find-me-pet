@@ -107,14 +107,21 @@ export default function FilteredResultsClient({ initialZipCode }) {
   const renderFilterButtons = () => {
     const allTypes = ['Dog', 'Cat', 'Rabbit'];
     return (
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-3">
         {allTypes.map((type) => (
           <Button
             key={type}
             onClick={() => handleFilterClick(type)}
             disabled={filtersLocked}
             variant={selectedPetTypes.includes(type) ? 'default' : 'outline'}
-            className={filtersLocked ? "cursor-not-allowed opacity-70" : ""}
+            className={`
+              ${filtersLocked ? "cursor-not-allowed opacity-70" : ""} 
+              px-4 py-2 rounded-full text-sm font-medium transition-all
+              ${selectedPetTypes.includes(type) 
+                ? 'bg-primary/90 text-white hover:bg-primary/80' 
+                : 'bg-white hover:bg-gray-50 border-gray-200'
+              }
+            `}
           >
             {type}s {selectedPetTypes.includes(type) && '✓'}
           </Button>
@@ -163,22 +170,31 @@ export default function FilteredResultsClient({ initialZipCode }) {
   };
 
   return (
-    <div>
-      {/* Filter section */}
-      <div ref={headerRef} className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 border-b py-4">
+    <div className="space-y-10">
+      {/* Filter section - iOS-like with blur effect */}
+      <div 
+        ref={headerRef} 
+        className="sticky top-0 z-10 py-3 pt-2 pb-4 px-1"
+        style={{
+          backdropFilter: 'blur(12px)',
+          backgroundColor: 'rgba(248, 249, 250, 0.7)', // Lighter gray that blends with background
+          WebkitBackdropFilter: 'blur(12px)',
+        }}
+      >
         {renderFilterButtons()}
       </div>
 
-      {/* Results section */}
-      <div className="mt-6">
-        {/* Pet grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      {/* Results section with improved spacing */}
+      <div className="mt-8 px-4">
+        {/* Pet grid with reduced spacing */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-6">
           {filteredPets.slice(0, displayCount).map(pet => (
-            <PetCard 
-              key={pet.id} 
-              pet={pet}
-              isTopMatch={false} // No top match in this view
-            />
+            <div key={pet.id} className="flex justify-center p-2">
+              <PetCard 
+                pet={pet}
+                isTopMatch={false}
+              />
+            </div>
           ))}
         </div>
 

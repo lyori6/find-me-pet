@@ -16,7 +16,7 @@ export default function DebugPage() {
   }, []);
   
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto px-4 pt-0 pb-4">
       <h1 className="text-2xl font-bold mb-4">Debug Information</h1>
       
       <div className="bg-gray-100 p-4 rounded">

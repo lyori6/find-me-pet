@@ -190,12 +190,16 @@ export default function ResultsClient({ initialZipCode }) {
   return (
     <div>
       {/* Filter section */}
-      <div ref={headerRef} className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 border-b py-4">
+      <div ref={headerRef} className="sticky top-0 backdrop-blur z-10 border-b py-3 pt-2 pb-4" style={{
+        backgroundColor: 'rgba(248, 249, 250, 0.7)', // Lighter gray that blends with background
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}>
         {renderFilterButtons()}
       </div>
 
       {/* Results section */}
-      <div className="mt-6">
+      <div className="mt-8">
         {/* AI Recommendation section - always show at the top when we have pets */}
         {filteredPets.length > 0 && (
           <div className="mb-8">
@@ -218,13 +222,14 @@ export default function ResultsClient({ initialZipCode }) {
         )}
 
         {/* Pet grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-8 gap-x-6">
           {orderedPets.slice(0, displayCount).map(pet => (
-            <PetCard 
-              key={pet.id} 
-              pet={pet} 
-              isTopMatch={pet.id === recommendedPetId}
-            />
+            <div key={pet.id} className="flex justify-center p-2">
+              <PetCard 
+                pet={pet} 
+                isTopMatch={pet.id === recommendedPetId}
+              />
+            </div>
           ))}
         </div>
 

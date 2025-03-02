@@ -104,7 +104,7 @@ export default function SearchPage() {
   }
   
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen pt-0 pb-12">
       <div className="container max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -193,4 +193,4 @@ export default function SearchPage() {
       />
     </div>
   )
-} 
+}

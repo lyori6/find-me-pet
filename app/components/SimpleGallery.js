@@ -87,12 +87,32 @@ export default function SimpleGallery({
         />
       </div>
       
-      {/* Image counter - always show with more prominent styling */}
-      <div className="absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1.5 rounded-md text-sm font-medium z-10 shadow-md">
-        <span aria-label="Image counter">
+      {/* Image counter - only show when there are multiple photos */}
+      {photos.length > 1 && (
+        <div
+          className="absolute bottom-4 right-4 bg-primary text-white px-3 py-1.5 rounded-md text-sm font-bold z-30 shadow-lg"
+        >
           {currentIndex + 1} / {photos.length}
-        </span>
-      </div>
+        </div>
+      )}
+      
+      {/* Dot indicators - always show when there are multiple photos */}
+      {photos.length > 1 && (
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 z-30">
+          {photos.map((_, index) => (
+            <button
+              key={`dot-${index}`}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentIndex 
+                  ? 'bg-primary border-2 border-white' 
+                  : 'bg-white hover:bg-white/70'
+              }`}
+              aria-label={`Go to image ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
       
       {photos.length > 1 && (
         <>

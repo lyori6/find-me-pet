@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { decodeHtmlEntities } from '@/app/utils/textUtils';
 import { petsCache } from '@/app/utils/cache';
 import SimpleGallery from '@/app/components/SimpleGallery';
+import GradientText from '@/app/components/GradientText';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -309,7 +310,7 @@ export default function PetDetailsClient({ petId }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-4 max-w-6xl">
+      <div className="container mx-auto px-4 pt-0 pb-4 max-w-6xl">
         {/* Back button and pet name - Repositioned back button */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -323,12 +324,16 @@ export default function PetDetailsClient({ petId }) {
           </div>
           <div className="mb-2">
             {loading ? (
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Loading...</h1>
+              <div className="h-10"></div>
             ) : (
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{name}</h1>
-            )}
-            {breeds && breeds.primary && (
-              <p className="text-gray-600 mt-1">{breeds.primary}{breeds.secondary ? ` / ${breeds.secondary}` : ''}</p>
+              <>
+                <h1 className="text-4xl font-bold text-gray-800">
+                  {name}
+                </h1>
+                {breeds && breeds.primary && (
+                  <p className="text-gray-600 mt-1">{breeds.primary}{breeds.secondary ? ` / ${breeds.secondary}` : ''}</p>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -369,66 +374,87 @@ export default function PetDetailsClient({ petId }) {
           </div>
         ) : (
           <div className="flex flex-col gap-8">
-            {/* Main content area */}
-            <div className="flex flex-col lg:flex-row gap-8">
-              {/* Image section */}
-              <div className="w-full lg:w-1/2">
+            {/* Main content area - Using custom media query for exactly 1000px breakpoint */}
+            <style jsx>{`
+              @media (min-width: 1000px) {
+                .pet-details-container {
+                  flex-direction: row !important;
+                }
+                .image-section {
+                  width: 50% !important;
+                  order: 2 !important;
+                  padding-left: 1rem !important;
+                  padding-bottom: 2rem !important;
+                  position: sticky !important;
+                  top: 2rem !important;
+                  align-self: flex-start !important;
+                  max-height: calc(100vh - 4rem) !important;
+                  overflow-y: auto !important;
+                  scrollbar-width: thin !important;
+                  scrollbar-color: rgba(0, 0, 0, 0.2) transparent !important;
+                }
+                .image-section::-webkit-scrollbar {
+                  width: 6px !important;
+                }
+                .image-section::-webkit-scrollbar-track {
+                  background: transparent !important;
+                }
+                .image-section::-webkit-scrollbar-thumb {
+                  background-color: rgba(0, 0, 0, 0.2) !important;
+                  border-radius: 6px !important;
+                }
+                .details-section {
+                  width: 50% !important;
+                  order: 1 !important;
+                  padding-right: 1rem !important;
+                }
+              }
+            `}</style>
+            <div className="flex flex-col gap-8 pet-details-container">
+              {/* Image section - moved to the right on wider screens */}
+              <div className="w-full image-section">
                 {/* Photo Gallery */}
                 {hasPhotos && (
-                  <div className="w-full mb-6">
-                    <SimpleGallery 
-                      photos={photos} 
-                      petName={name}
-                      className="shadow-lg"
-                    />
-
-                    {/* Thumbnails for desktop */}
-                    {!isMobile && photos.length > 1 && (
-                      <div className="hidden lg:flex mt-4 gap-2 overflow-x-auto pb-2 max-w-full">
-                        {photos.map((photo, index) => (
-                          <button
-                            key={`photo-${index}`}
-                            onClick={() => setActivePhotoIndex(index)}
-                            className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-200 ${
-                              index === activePhotoIndex ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-100'
-                            }`}
-                          >
-                            <Image
-                              src={photo.medium || photo.small || photo.large || photo.full}
-                              alt={`Thumbnail ${index + 1}`}
-                              fill
-                              sizes="80px"
-                              className="object-cover"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Location and Organization - Now below the image with more spacing */}
-                {fullAddress && (
-                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-6 hover:shadow-lg transition-shadow duration-300">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
-                    <h2 className="text-xl font-bold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
-                      Location
-                    </h2>
-                    <div className="flex items-center text-gray-600">
-                      <span>{fullAddress}{organization ? ` • ${organization}` : ''}</span>
+                  <div className="w-full mb-6 relative mx-auto" style={{ maxWidth: "880px" }}>
+                    <div className="relative">
+                      <div className="absolute -inset-3 rounded-2xl z-0" 
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(var(--primary-rgb), 0.2) 0%, rgba(var(--secondary-rgb), 0.2) 100%)',
+                          filter: 'blur(20px)',
+                          opacity: 0.7
+                        }}
+                      ></div>
+                      <SimpleGallery 
+                        photos={photos} 
+                        petName={name}
+                        className="shadow-lg relative z-10"
+                        initialIndex={activePhotoIndex}
+                        onIndexChange={setActivePhotoIndex}
+                      />
+                      
+                      {/* Thumbnails for desktop */}
+                      {!isMobile && photos.length > 1 && (
+                        <div className="hidden lg:flex mt-4 gap-2 overflow-x-auto pb-2 max-w-full">
+                          {photos.map((photo, index) => (
+                            <button
+                              key={`photo-${index}`}
+                              onClick={() => setActivePhotoIndex(index)}
+                              className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-200 ${
+                                index === activePhotoIndex ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-100'
+                              }`}
+                            >
+                              <Image
+                                src={photo.medium || photo.small || photo.large || photo.full}
+                                alt={`Thumbnail ${index + 1}`}
+                                fill
+                                sizes="80px"
+                                className="object-cover"
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-                
-                {/* Description - Now below the image */}
-                {pet?.description && (
-                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-6 hover:shadow-lg transition-shadow duration-300">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
-                    <h2 className="text-xl font-bold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
-                      <Heart size={20} className="mr-2 text-primary" />
-                      Meet {name}
-                    </h2>
-                    {renderDescription()}
                   </div>
                 )}
                 
@@ -436,9 +462,9 @@ export default function PetDetailsClient({ petId }) {
                 {hasVideos && (
                   <div className="w-full mt-4 mb-6 bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
-                    <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                    <h3 className="text-xl font-bold mb-4 flex items-center">
                       <Film size={20} className="mr-2 text-primary" />
-                      Videos
+                      <span className="text-gray-800">Videos</span>
                     </h3>
                     <div className="space-y-4">
                       {videos.map((video, index) => (
@@ -457,16 +483,45 @@ export default function PetDetailsClient({ petId }) {
                 )}
               </div>
               
-              {/* Details section */}
-              <div className="w-full lg:w-1/2 space-y-6">
+              {/* Details section - split into two parts for wider screens */}
+              <div className="w-full details-section space-y-6">
+                {/* Location and Meet cards - Now first in the left column on wider screens */}
+                <div className="space-y-6 mb-6">
+                  {/* Location and Organization */}
+                  {fullAddress && (
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                      <h2 className="text-xl font-bold mb-3 flex items-center">
+                        <MapPin size={20} className="mr-2 text-primary" />
+                        <span className="text-gray-800">Location</span>
+                      </h2>
+                      <div className="flex items-center text-gray-600">
+                        <span>{fullAddress}{organization ? ` • ${organization}` : ''}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Description - Meet card */}
+                  {pet?.description && (
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+                      <h2 className="text-xl font-bold mb-3 flex items-center">
+                        <Heart size={20} className="mr-2 text-primary" />
+                        <span className="text-gray-800">Meet {name}</span>
+                      </h2>
+                      {renderDescription()}
+                    </div>
+                  )}
+                </div>
+                
                 {/* Attributes Section - Simplified with universal cards */}
                 {Object.values(attributes).some(value => value) && (
                   <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-5 hover:shadow-lg transition-shadow duration-300">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
                     <div className="relative z-10">
-                      <h2 className="text-xl font-bold mb-5 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                      <h2 className="text-xl font-bold mb-5 flex items-center">
                         <Info size={20} className="mr-2 text-primary" />
-                        About {name}
+                        <span className="text-gray-800">About {name}</span>
                       </h2>
                       
                       {/* Key Attributes - Grouped with dividers */}
@@ -536,9 +591,9 @@ export default function PetDetailsClient({ petId }) {
                   <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-5 hover:shadow-lg transition-shadow duration-300">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
                     <div className="relative z-10">
-                      <h2 className="text-xl font-bold mb-5 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                      <h2 className="text-xl font-bold mb-5 flex items-center">
                         <Users size={20} className="mr-2 text-primary" />
-                        Good With
+                        <span className="text-gray-800">Good With</span>
                       </h2>
                       
                       {/* Grid layout for environment */}
@@ -606,9 +661,9 @@ export default function PetDetailsClient({ petId }) {
                   <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-5 hover:shadow-lg transition-shadow duration-300">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
                     <div className="relative z-10">
-                      <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                      <h2 className="text-xl font-bold mb-4 flex items-center">
                         <Smile size={20} className="mr-2 text-primary" />
-                        Personality
+                        <span className="text-gray-800">Personality</span>
                       </h2>
                       
                       {/* Flex layout for personality traits */}
@@ -632,9 +687,9 @@ export default function PetDetailsClient({ petId }) {
                 <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden mb-5 hover:shadow-lg transition-shadow duration-300">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
                   <div className="relative z-10">
-                    <h2 className="text-xl font-bold mb-5 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center">
+                    <h2 className="text-xl font-bold mb-5 flex items-center">
                       <FileText size={20} className="mr-2 text-primary" />
-                      Additional Details
+                      <span className="text-gray-800">Additional Details</span>
                     </h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

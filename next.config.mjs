@@ -30,18 +30,12 @@ function mergeConfig(nextConfig, userConfig) {
     return
   }
 
-  for (const key in userConfig) {
-    if (
-      typeof nextConfig[key] === 'object' &&
-      !Array.isArray(nextConfig[key])
-    ) {
-      nextConfig[key] = {
-        ...nextConfig[key],
-        ...userConfig[key],
-      }
-    } else {
-      nextConfig[key] = userConfig[key]
-    }
+  const { experimental: userExperimental, ...userRest } = userConfig.default
+
+  Object.assign(nextConfig, userRest)
+
+  if (userExperimental) {
+    Object.assign(nextConfig.experimental, userExperimental)
   }
 }
 

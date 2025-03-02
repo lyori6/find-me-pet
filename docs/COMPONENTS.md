@@ -243,14 +243,47 @@ interface LoadingSpinnerProps {
 />
 ```
 
+### GradientText
+
+**File**: `/app/components/GradientText.js`
+
+**Purpose**: Provides a reusable component for displaying text with the primary brand color.
+
+**Props**:
+```typescript
+interface GradientTextProps {
+  children: ReactNode;
+  animated?: boolean; // Kept for backward compatibility but no longer used
+  as?: string;        // HTML element to render (e.g., 'span', 'h1', 'div')
+  className?: string; // Additional CSS classes
+}
+```
+
+**Key Features**:
+- Consistent primary color styling across the application
+- Customizable HTML element rendering
+- Subtle text shadow for enhanced readability
+- Maintains backward compatibility with previous gradient implementation
+
 **Implementation Details**:
-- Uses Framer Motion for smooth animations
-- Implements a dual-layer approach with static and animated elements
-- Detailed documentation available in [/docs/ui/LOADING-STATES.md](/docs/ui/LOADING-STATES.md)
+- Uses the primary brand color (#ef4444)
+- Applies consistent letter spacing and text shadow
+- Maintains the same component API for backward compatibility
+
+**Usage Examples**:
+```jsx
+// Basic usage
+<GradientText>Hello World</GradientText>
+
+// As a heading element
+<GradientText as="h1" className="text-4xl font-bold">
+  Welcome to FindMePet
+</GradientText>
+```
+
+**Note**: This component was previously implemented as a gradient text effect but has been updated to use the primary brand color for a more consistent visual identity.
 
 ## UI Components
-
-The app uses a collection of UI primitive components built with Radix UI. These components provide the foundation for building more complex components with consistent styling and behavior.
 
 ### Button
 

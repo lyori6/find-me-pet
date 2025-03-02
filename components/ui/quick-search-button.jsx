@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { getZipCode } from '@/app/utils/storage';
+import { Search } from 'lucide-react';
 
-export default function QuickSearchButton() {
+export default function QuickSearchButton({ className = '' }) {
   const [loading, setLoading] = useState(false);
   
   const handleQuickSearch = () => {
@@ -24,12 +25,12 @@ export default function QuickSearchButton() {
   
   return (
     <Button 
-      size="lg" 
       variant="outline"
-      className="text-lg px-8 py-6 border-2 hover:bg-muted/50 transition-all hover:scale-105 w-full sm:w-auto"
+      className={`w-full sm:w-auto text-base font-medium py-5 px-8 border-2 border-slate-300 text-slate-700 rounded-full hover:bg-slate-100 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap ${className}`}
       onClick={handleQuickSearch}
       disabled={loading}
     >
+      <Search className="w-4 h-4" />
       {loading ? "Loading..." : "Quick Search"}
     </Button>
   );

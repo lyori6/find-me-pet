@@ -57,7 +57,7 @@ export default function QuestionnairePage() {
   }
   
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen pt-0 pb-12">
       {/* Progress bar */}
       <div className="max-w-md mx-auto mb-8 px-4">
         <div className="h-2 bg-muted rounded-full overflow-hidden">
