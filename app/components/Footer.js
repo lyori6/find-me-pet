@@ -22,7 +22,7 @@ export default function Footer() {
           </div>
           
           {/* Navigation links */}
-          <div>
+          <div className="pt-1">
             <ul className="space-y-3">
               <li className="flex items-center">
                 <Home className="w-4 h-4 text-primary mr-2" />
@@ -36,19 +36,21 @@ export default function Footer() {
                   Find a Pet
                 </Link>
               </li>
-              <li className="flex items-center mb-8">
+              <li className="flex items-center">
                 <Search className="w-4 h-4 text-primary mr-2" />
                 <Link href="/search" className="text-sm text-slate-600 hover:text-primary transition-colors">
                   Quick Search
                 </Link>
               </li>
             </ul>
+            {/* Added small space below Quick Search - reduced by 20% */}
+            <div className="h-6"></div>
           </div>
         </div>
         
-        {/* Footer bottom / copyright */}
-        <div className="border-t border-slate-200 pt-12 mb-6">
-          <div className="flex justify-between items-center py-4">
+        {/* Footer bottom / copyright - reduced spacing */}
+        <div className="border-t border-slate-200 pt-8 mb-4">
+          <div className="flex justify-between items-center py-2">
             <p className="text-sm text-slate-500">
               &copy; {currentYear} FindMe.pet. All rights reserved. Made with ❤️ by <a 
                 href="https://www.linkedin.com/in/lyor/" 
